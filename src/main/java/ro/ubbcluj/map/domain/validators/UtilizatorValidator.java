@@ -9,11 +9,11 @@ public class UtilizatorValidator implements Validator<Utilizator> {
     public void validate(Utilizator entity) throws ValidationException {
         //TODO: implement method validate
         String erori = "";
-        if(Objects.equals(entity.getLastName(), ""))
+        if (Objects.equals(entity.getLastName(), ""))
             erori += "Nume invalid!\n";
-        if(Objects.equals(entity.getFirstName(), ""))
+        if (Objects.equals(entity.getFirstName(), ""))
             erori += "Prenume invalid!";
-        if(!Objects.equals(erori, ""))
+        if (!Objects.equals(erori, ""))
             throw new ValidationException(erori);
     }
 }

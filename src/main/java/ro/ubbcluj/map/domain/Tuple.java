@@ -5,6 +5,7 @@ import java.util.Objects;
 
 /**
  * Define a Tuple o generic type entities
+ *
  * @param <E1> - tuple first entity type
  * @param <E2> - tuple second entity type
  */
@@ -35,13 +36,13 @@ public class Tuple<E1, E2> {
 
     @Override
     public String toString() {
-        return "" + e1 + "," + e2;
+        return e1 + "," + e2;
 
     }
 
     @Override
     public boolean equals(Object obj) {
-        return this.e1.equals(((Tuple) obj).e1) && this.e2.equals(((Tuple) obj).e2);
+        return this.e1.equals(((Tuple<?, ?>) obj).e1) && this.e2.equals(((Tuple<?, ?>) obj).e2);
     }
 
     @Override

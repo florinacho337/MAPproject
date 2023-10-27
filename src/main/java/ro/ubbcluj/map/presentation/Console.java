@@ -11,10 +11,8 @@ import ro.ubbcluj.map.service.DuplicateException;
 import ro.ubbcluj.map.service.FriendshipsService;
 import ro.ubbcluj.map.service.UsersService;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Scanner;
+import java.util.*;
+import java.util.stream.StreamSupport;
 
 public class Console {
     FriendshipsService friendshipsService;
@@ -38,11 +36,13 @@ public class Console {
         System.out.println("0.Iesi din program(exit)\n");
         System.out.println("1.Adauga user (add_user firstName lastName)");
         System.out.println("2.Sterge user (rm_user id)");
-        System.out.println("3.Adauga prietenie (add_friendship idU1 idU2)");
-        System.out.println("4.Sterge prietenie (rm_friendship idU1 idU2)");
-        System.out.println("5.Afiseaza  numarul de comunitati (nr_comunitati)");
-        System.out.println("6.Afiseaza cea mai sociabia comunitate (comunitate_sociabila)");
-        System.out.println("Pentru a afisa meniul ulterior tastati \"meniu\". ");
+        System.out.println("3.Afiseaza useri (show_users)");
+        System.out.println("4.Adauga prietenie (add_friendship idU1 idU2)");
+        System.out.println("5.Sterge prietenie (rm_friendship idU1 idU2)");
+        System.out.println("6.Afiseaza prietenii (show_friendships)");
+        System.out.println("7.Afiseaza  numarul de comunitati (nr_comunitati)");
+        System.out.println("8.Afiseaza cea mai sociabia comunitate (comunitate_sociabila)");
+        System.out.println("Pentru a afisa meniul ulterior tastati \"meniu\".");
     }
 
     public void run() {
@@ -80,29 +80,62 @@ public class Console {
                     case "comunitate_sociabila":
                         comunitateSociabila(parts);
                         break;
+                    case "show_users":
+                        afiseazaUseri(parts);
+                        break;
+                    case "show_friendships":
+                        afiseazaPrietenii(parts);
+                        break;
                     default:
                         System.out.println("Comanda invalida!");
                 }
-            } catch (IllegalArgumentException | DuplicateException | ValidationException e){
+            } catch (IllegalArgumentException | DuplicateException | ValidationException | NoSuchElementException e) {
                 System.out.println(e.getMessage());
             }
         }
 
     }
 
+    private void afiseazaPrietenii(String[] parts) {
+        if (parts.length != 1) {
+            System.out.println("NUmar de parametrii invalid!");
+            return;
+        }
+        Iterable<Prietenie> prietenii = friendshipsService.getAll();
+        if (StreamSupport.stream(prietenii.spliterator(), false).findAny().isEmpty()) {
+            System.out.println("Nu exista prietenii!");
+            return;
+        }
+        prietenii.forEach(prietenie -> System.out.format("(%s). %s\n", prietenie.getId(), prietenie));
+    }
+
+    private void afiseazaUseri(String[] parts) {
+        if (parts.length != 1) {
+            System.out.println("NUmar de parametrii invalid!");
+            return;
+        }
+        Iterable<Utilizator> users = usersService.getAll();
+        if (StreamSupport.stream(users.spliterator(), false).findAny().isEmpty()) {
+            System.out.println("Nu exista utilizatori!");
+            return;
+        }
+        users.forEach(user -> System.out.format("%d. %s\n", user.getId(), user));
+    }
+
     private void comunitateSociabila(String[] parts) {
-        if(parts.length != 1){
+        if (parts.length != 1) {
             System.out.println("NUmar de parametrii invalid!");
             return;
         }
         ArrayList<Integer> list = friendshipsService.biggestConnectedComponent();
-        for(int l:list){
-            System.out.println(usersService.find((long) l));
-        }
+        list.forEach(l ->{
+            Utilizator user = usersService.find(Long.valueOf(l));
+            System.out.format("%d. %s\n", user.getId(), user);
+        });
     }
 
     private void nrComunitati(String[] parts) {
-        if(parts.length != 1){
+        if (parts.length != 1) {
             System.out.println("NUmar de parametrii invalid!");
             return;
         }
@@ -117,10 +150,6 @@ public class Console {
 
         Tuple<Long, Long> id = new Tuple<>(Long.valueOf(parts[1]), Long.valueOf(parts[2]));
         Prietenie prietenie = friendshipsService.remove(id);
-        if(prietenie == null){
-            System.out.println("Acesasta prietenie nu exista!");
-            return;
-        }
         System.out.println(prietenie + " stearsa cu succes!");
     }
 
@@ -155,10 +184,6 @@ public class Console {
         }
 
         Utilizator user_sters = usersService.remove(Long.parseLong(parts[1]));
-        if(user_sters == null) {
-            System.out.println("Acest user nu exista!");
-            return;
-        }
         friendshipsService.removePrietenii(user_sters);
         System.out.println(user_sters + " si prieteniile acestuia au fost sterse cu succes!");
     }

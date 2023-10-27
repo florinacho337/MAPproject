@@ -8,10 +8,10 @@ import java.io.*;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 
-
-public abstract class AbstractFileRepository<ID, E extends Entity<ID>> extends InMemoryRepository<ID,E> {
+public abstract class AbstractFileRepository<ID, E extends Entity<ID>> extends InMemoryRepository<ID, E> {
     String fileName;
 
     public AbstractFileRepository(String fileName, Validator<E> validator) {
@@ -63,10 +63,9 @@ public abstract class AbstractFileRepository<ID, E extends Entity<ID>> extends I
     protected abstract String createEntityAsString(E entity); //Template Method
 
     @Override
-    public E save(E entity) {
-        E result = super.save(entity);
-        if (result == null)
-            writeToFile(entity);
+    public Optional<E> save(E entity) {
+        Optional<E> result = super.save(entity);
+        if (result.isEmpty()) writeToFile(entity);
         return result;
 
     }

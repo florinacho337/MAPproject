@@ -1,6 +1,6 @@
 package ro.ubbcluj.map.service;
 
-public class DuplicateException extends RuntimeException{
+public class DuplicateException extends RuntimeException {
     public DuplicateException() {
     }
 

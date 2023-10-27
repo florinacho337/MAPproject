@@ -8,7 +8,7 @@ import java.util.Objects;
 public class Utilizator extends Entity<Long> {
     private String firstName;
     private String lastName;
-    private List<Utilizator> friends;
+    private final List<Utilizator> friends;
 
     public Utilizator(String firstName, String lastName) {
         this.firstName = firstName;
@@ -36,11 +36,13 @@ public class Utilizator extends Entity<Long> {
         return friends;
     }
 
-    public void addFriend(Utilizator u){
+    public void addFriend(Utilizator u) {
         friends.add(u);
     }
 
-    public void removeFriend(Utilizator u){friends.remove(u);}
+    public void removeFriend(Utilizator u) {
+        friends.remove(u);
+    }
 
     @Override
     public String toString() {
@@ -53,8 +55,7 @@ public class Utilizator extends Entity<Long> {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof Utilizator)) return false;
-        Utilizator that = (Utilizator) o;
+        if (!(o instanceof Utilizator that)) return false;
         return getFirstName().equals(that.getFirstName()) &&
                 getLastName().equals(that.getLastName()) &&
                 getFriends().equals(that.getFriends());

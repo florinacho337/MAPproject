@@ -3,7 +3,7 @@ package ro.ubbcluj.map.domain;
 import java.time.LocalDateTime;
 
 
-public class Prietenie extends Entity<Tuple<Long,Long>> {
+public class Prietenie extends Entity<Tuple<Long, Long>> {
 
     LocalDateTime date;
     Utilizator u1, u2;
@@ -18,12 +18,11 @@ public class Prietenie extends Entity<Tuple<Long,Long>> {
         return u2;
     }
 
-    public Utilizator getU1(){
+    public Utilizator getU1() {
         return u1;
     }
 
     /**
-     *
      * @return the date when the friendship was created
      */
     public LocalDateTime getDate() {
