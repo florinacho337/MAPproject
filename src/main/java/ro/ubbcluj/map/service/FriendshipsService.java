@@ -48,12 +48,27 @@ public class FriendshipsService implements Service<Tuple<Long, Long>, Prietenie>
 
     @Override
     public Prietenie remove(Tuple<Long, Long> id) {
+        Utilizator u1 = null, u2 = null;
+        if(repoUsers.findOne(id.getLeft()).isPresent())
+            u1 = repoUsers.findOne(id.getLeft()).get();
+        if(repoUsers.findOne(id.getRight()).isPresent())
+            u2 = repoUsers.findOne(id.getRight()).get();
+        if(u1 != null && u2 != null) {
+            u1.removeFriend(u2);
+            u2.removeFriend(u1);
+        }
         return repoFriendships.delete(id).get();
     }
 
-    public void removePrietenii(Utilizator user) {
-        List<Utilizator> friends = user.getFriends();
-        Long id_user = user.getId();
+    public void removePrietenii(Long id_user) {
+        Utilizator user = null;
+        List<Utilizator> friends = new ArrayList<>();
+        ArrayList<Tuple<Long, Long>> deSters = new ArrayList<>();
+        if(repoUsers.findOne(id_user).isPresent())
+            user = repoUsers.findOne(id_user).get();
+        if(user != null)
+            friends = user.getFriends();
+        Utilizator finalUser = user;
         friends.forEach(friend -> {
             long id_friend = friend.getId();
             Tuple<Long, Long> id;
@@ -61,14 +76,17 @@ public class FriendshipsService implements Service<Tuple<Long, Long>, Prietenie>
                 id = new Tuple<>(id_user, id_friend);
             else
                 id = new Tuple<>(id_friend, id_user);
-            remove(id);
-            friend.removeFriend(user);
+            deSters.add(id);
+            friend.removeFriend(finalUser);
         });
+        deSters.forEach(this::remove);
     }
 
     @Override
     public Prietenie find(Tuple<Long, Long> id) {
-        return repoFriendships.findOne(id).get();
+        if(repoFriendships.findOne(id).isPresent())
+            return repoFriendships.findOne(id).get();
+        return null;
     }
 
     @Override
@@ -79,16 +97,20 @@ public class FriendshipsService implements Service<Tuple<Long, Long>, Prietenie>
     private int DFSUtil(int id, boolean[] visited, boolean biggestconn, ArrayList<Integer> lista) {
         visited[id] = true;
         final int[] componentSize = {1};
+        List<Utilizator> friends = null;
 
         if (biggestconn)
             lista.add(id);
 
-        List<Utilizator> friends = repoUsers.findOne((long) id).get().getFriends();
-        friends.forEach(friend -> {
-            int n = Math.toIntExact(friend.getId());
-            if(!visited[n])
-                componentSize[0] += DFSUtil(n, visited, biggestconn, lista);
-        });
+        if(repoUsers.findOne((long) id).isPresent())
+            friends = repoUsers.findOne((long) id).get().getFriends();
+        if(friends != null) {
+            friends.forEach(friend -> {
+                int n = Math.toIntExact(friend.getId());
+                if (!visited[n])
+                    componentSize[0] += DFSUtil(n, visited, biggestconn, lista);
+            });
+        }
         return componentSize[0];
     }
 
@@ -99,9 +121,13 @@ public class FriendshipsService implements Service<Tuple<Long, Long>, Prietenie>
         if(biggestconn)
             lista.add(id);
 
-        List<Utilizator> friends = repoUsers.findOne((long) id).get().getFriends();
-        ListIterator<Utilizator> i = friends.listIterator();
-        if (i.hasNext()) {
+        List<Utilizator> friends = null;
+        ListIterator<Utilizator> i = null;
+        if(repoUsers.findOne((long) id).isPresent())
+            friends = repoUsers.findOne((long) id).get().getFriends();
+        if(friends != null)
+            i = friends.listIterator();
+        if (i != null && i.hasNext()) {
             int n = Math.toIntExact(i.next().getId());
             if (!visited[n])
                 componentSize += DFSUtil2(n, visited, biggestconn, lista);
@@ -138,6 +164,7 @@ public class FriendshipsService implements Service<Tuple<Long, Long>, Prietenie>
                     startingNode = v;
                 }
             }
+            Arrays.fill(visited, false);
         }
     }
 

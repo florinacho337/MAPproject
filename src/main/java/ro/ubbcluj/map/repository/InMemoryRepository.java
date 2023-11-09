@@ -15,7 +15,6 @@ public class InMemoryRepository<ID, E extends Entity<ID>> implements Repository<
         this.validator = validator;
         entities = new HashMap<>();
     }
-
     @Override
     public Optional<E> findOne(ID id) {
         if (id == null)

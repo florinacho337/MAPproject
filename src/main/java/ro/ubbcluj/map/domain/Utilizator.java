@@ -44,6 +44,10 @@ public class Utilizator extends Entity<Long> {
         friends.remove(u);
     }
 
+    public void removeAllFriends(){
+        friends.clear();
+    }
+
     @Override
     public String toString() {
         return "Utilizator{" +

@@ -183,8 +183,8 @@ public class Console {
             return;
         }
 
+        friendshipsService.removePrietenii(Long.parseLong(parts[1]));
         Utilizator user_sters = usersService.remove(Long.parseLong(parts[1]));
-        friendshipsService.removePrietenii(user_sters);
         System.out.println(user_sters + " si prieteniile acestuia au fost sterse cu succes!");
     }
 
