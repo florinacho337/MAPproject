@@ -8,7 +8,8 @@ import java.util.Map;
 import java.util.Optional;
 
 public class InMemoryRepository<ID, E extends Entity<ID>> implements Repository<ID, E> {
-    private final Validator<E> validator;
+
+    Validator<E> validator;
     Map<ID, E> entities;
 
     public InMemoryRepository(Validator<E> validator) {

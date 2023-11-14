@@ -1,17 +1,27 @@
 package ro.ubbcluj.map.domain;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 
 public class Prietenie extends Entity<Tuple<Long, Long>> {
 
-    LocalDateTime date;
+    LocalDate date;
     Utilizator u1, u2;
+    DateTimeFormatter dateTimeFormatter;
 
-    public Prietenie(Utilizator u1, Utilizator u2) {
+    public Prietenie(Utilizator u1, Utilizator u2, String date) {
         this.u1 = u1;
         this.u2 = u2;
-        this.date = LocalDateTime.now();
+        dateTimeFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+        this.date = LocalDate.parse(date, dateTimeFormatter);
+    }
+
+    public Prietenie(Utilizator u1, Utilizator u2){
+        this.u1 = u1;
+        this.u2 = u2;
+        this.date = LocalDate.now();
     }
 
     public Utilizator getU2() {
@@ -25,7 +35,7 @@ public class Prietenie extends Entity<Tuple<Long, Long>> {
     /**
      * @return the date when the friendship was created
      */
-    public LocalDateTime getDate() {
+    public LocalDate getDate() {
         return date;
     }
 

@@ -2,22 +2,19 @@ package ro.ubbcluj.map.service;
 
 import ro.ubbcluj.map.domain.Utilizator;
 import ro.ubbcluj.map.repository.InMemoryRepository;
+import ro.ubbcluj.map.repository.UserDBRepository;
 
 import java.util.List;
 
 public class UsersService implements Service<Long, Utilizator> {
-    InMemoryRepository<Long, Utilizator> repoUsers;
-
-    public UsersService(InMemoryRepository<Long, Utilizator> repoUsers) {
+//    InMemoryRepository<Long, Utilizator> repoUsers;
+    UserDBRepository repoUsers;
+    public UsersService(UserDBRepository repoUsers) {
         this.repoUsers = repoUsers;
     }
 
     @Override
     public void add(Utilizator E) {
-        long id = 0;
-        while (repoUsers.findOne(id).isPresent())
-            id++;
-        E.setId(id);
         repoUsers.save(E);
     }
 

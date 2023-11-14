@@ -3,17 +3,23 @@ package ro.ubbcluj.map.service;
 import ro.ubbcluj.map.domain.Prietenie;
 import ro.ubbcluj.map.domain.Tuple;
 import ro.ubbcluj.map.domain.Utilizator;
-import ro.ubbcluj.map.repository.InMemoryRepository;
+import ro.ubbcluj.map.repository.FriendshipDBRepository;
+import ro.ubbcluj.map.repository.UserDBRepository;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 public class FriendshipsService implements Service<Tuple<Long, Long>, Prietenie> {
-    InMemoryRepository<Tuple<Long, Long>, Prietenie> repoFriendships;
-    InMemoryRepository<Long, Utilizator> repoUsers;
+//    InMemoryRepository<Tuple<Long, Long>, Prietenie> repoFriendships;
+//    InMemoryRepository<Long, Utilizator> repoUsers;
+
+    FriendshipDBRepository repoFriendships;
+    UserDBRepository repoUsers;
     int startingNode;
     private static long maxID;
 
-    public FriendshipsService(InMemoryRepository<Tuple<Long, Long>, Prietenie> repoFriendships, InMemoryRepository<Long, Utilizator> repoUsers) {
+    public FriendshipsService(FriendshipDBRepository repoFriendships, UserDBRepository repoUsers) {
         this.repoFriendships = repoFriendships;
         this.repoUsers = repoUsers;
     }
@@ -61,25 +67,37 @@ public class FriendshipsService implements Service<Tuple<Long, Long>, Prietenie>
     }
 
     public void removePrietenii(Long id_user) {
-        Utilizator user = null;
-        List<Utilizator> friends = new ArrayList<>();
-        ArrayList<Tuple<Long, Long>> deSters = new ArrayList<>();
+        Utilizator user;
+        List<Utilizator> friends;
         if(repoUsers.findOne(id_user).isPresent())
             user = repoUsers.findOne(id_user).get();
-        if(user != null)
-            friends = user.getFriends();
-        Utilizator finalUser = user;
-        friends.forEach(friend -> {
-            long id_friend = friend.getId();
-            Tuple<Long, Long> id;
-            if(id_user < id_friend)
-                id = new Tuple<>(id_user, id_friend);
-            else
-                id = new Tuple<>(id_friend, id_user);
-            deSters.add(id);
-            friend.removeFriend(finalUser);
-        });
+        else {
+            user = null;
+        }
+        friends = Objects.requireNonNull(user).getFriends();
+
+        List<Tuple<Long, Long>> deSters = friends.stream()
+                .map(friend -> collectFriendshipsToRemove(id_user, friend))
+        .toList();
         deSters.forEach(this::remove);
+        deSters.forEach(id_friend -> {
+            if(Objects.equals(id_friend.getLeft(), id_user))
+                Objects.requireNonNull(user).removeFriend(repoUsers.findOne(id_friend.getRight()).get());
+            else
+                Objects.requireNonNull(user).removeFriend(repoUsers.findOne(id_friend.getLeft()).get());
+        });
+
+
+    }
+
+    private static Tuple<Long, Long> collectFriendshipsToRemove(Long id_user, Utilizator friend) {
+        long id_friend = friend.getId();
+        if(id_user < id_friend)
+            return new Tuple<>(id_user, id_friend);
+        else
+            return new Tuple<>(id_friend, id_user);
+//        deSters.add(id);
+//        friend.removeFriend(finalUser);
     }
 
     @Override
@@ -176,5 +194,39 @@ public class FriendshipsService implements Service<Tuple<Long, Long>, Prietenie>
         if (Objects.equals(list.getFirst(), list.getLast()) && list.size() > 1)
             list.removeLast();
         return list;
+    }
+
+    public List<Tuple<Utilizator, String>> prieteniiDinLuna(Long id_user, int luna){
+        Utilizator utilizator = null;
+        if(repoUsers.findOne(id_user).isPresent())
+            utilizator = repoUsers.findOne(id_user).get();
+        List<Utilizator> prieteniUser = Objects.requireNonNull(utilizator).getFriends();
+        return prieteniUser.stream()
+                .map(prieten -> collectFriendships(id_user, prieten, luna))
+                .filter(Objects::nonNull)
+                .toList();
+    }
+
+    private Tuple<Utilizator, String> collectFriendships(Long id_user, Utilizator prieten, int luna) {
+        Long id_prieten = prieten.getId();
+        Tuple<Long, Long> id_prietenie;
+        if(id_user < id_prieten)
+            id_prietenie = new Tuple<>(id_user, id_prieten);
+        else
+            id_prietenie = new Tuple<>(id_prieten, id_user);
+        Prietenie prietenie = null;
+        if(repoFriendships.findOne(id_prietenie).isPresent())
+            prietenie = repoFriendships.findOne(id_prietenie).get();
+        Utilizator u1 = Objects.requireNonNull(prietenie).getU1();
+        Utilizator u2 = prietenie.getU2();
+        LocalDate friendsFrom = prietenie.getDate();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+        if(friendsFrom.getMonth().getValue() == luna) {
+            if (id_user.equals(u1.getId()))
+                return new Tuple<>(u2, friendsFrom.format(formatter));
+            else
+                return new Tuple<>(u1, friendsFrom.format(formatter));
+        }
+        return null;
     }
 }

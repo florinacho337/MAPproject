@@ -3,6 +3,7 @@ package ro.ubbcluj.map.repository;
 import ro.ubbcluj.map.domain.Entity;
 import ro.ubbcluj.map.domain.Utilizator;
 import ro.ubbcluj.map.domain.validators.ValidationException;
+import ro.ubbcluj.map.domain.validators.Validator;
 
 import java.util.Optional;
 

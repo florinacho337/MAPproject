@@ -3,10 +3,9 @@ package ro.ubbcluj.map.presentation;
 import ro.ubbcluj.map.domain.Prietenie;
 import ro.ubbcluj.map.domain.Tuple;
 import ro.ubbcluj.map.domain.Utilizator;
-import ro.ubbcluj.map.domain.validators.PrietenieValidator;
-import ro.ubbcluj.map.domain.validators.UtilizatorValidator;
 import ro.ubbcluj.map.domain.validators.ValidationException;
-import ro.ubbcluj.map.repository.InMemoryRepository;
+import ro.ubbcluj.map.repository.FriendshipDBRepository;
+import ro.ubbcluj.map.repository.UserDBRepository;
 import ro.ubbcluj.map.service.DuplicateException;
 import ro.ubbcluj.map.service.FriendshipsService;
 import ro.ubbcluj.map.service.UsersService;
@@ -15,15 +14,21 @@ import java.util.*;
 import java.util.stream.StreamSupport;
 
 public class Console {
-    FriendshipsService friendshipsService;
-    UsersService usersService;
+    private final FriendshipsService friendshipsService;
+//    UsersService usersService;
+    private final UsersService usersService;
     private static final Console instance = new Console();
 
     private Console() {
-        UtilizatorValidator validatorUser = new UtilizatorValidator();
-        PrietenieValidator validatorFriendship = new PrietenieValidator();
-        InMemoryRepository<Long, Utilizator> repoUsers = new InMemoryRepository<>(validatorUser);
-        InMemoryRepository<Tuple<Long, Long>, Prietenie> repoFriendships = new InMemoryRepository<>(validatorFriendship);
+        String url = "jdbc:postgresql://localhost:5432/socialnetwork";
+        String username = "postgres";
+        String password = "postgres";
+//        UtilizatorValidator validatorUser = new UtilizatorValidator();
+//        PrietenieValidator validatorFriendship = new PrietenieValidator();
+//        InMemoryRepository<Long, Utilizator> repoUsers = new InMemoryRepository<>(validatorUser);
+//        InMemoryRepository<Tuple<Long, Long>, Prietenie> repoFriendships = new InMemoryRepository<>(validatorFriendship);
+        UserDBRepository repoUsers = new UserDBRepository(url, username, password);
+        FriendshipDBRepository repoFriendships = new FriendshipDBRepository(url, username, password);
         usersService = new UsersService(repoUsers);
         friendshipsService = new FriendshipsService(repoFriendships, repoUsers);
     }
@@ -32,17 +37,28 @@ public class Console {
         return instance;
     }
 
+    private static void afiseazaPrieteniiLuna(Tuple<Utilizator, String> prietenie) {
+        String firstName = prietenie.getLeft().getFirstName();
+        String lastName = prietenie.getLeft().getLastName();
+        String friendsFrom = prietenie.getRight();
+        System.out.format("%s| %s| %s\n", firstName, lastName, friendsFrom);
+    }
+
     private void Meniu() {
-        System.out.println("0.Iesi din program(exit)\n");
-        System.out.println("1.Adauga user (add_user firstName lastName)");
-        System.out.println("2.Sterge user (rm_user id)");
-        System.out.println("3.Afiseaza useri (show_users)");
-        System.out.println("4.Adauga prietenie (add_friendship idU1 idU2)");
-        System.out.println("5.Sterge prietenie (rm_friendship idU1 idU2)");
-        System.out.println("6.Afiseaza prietenii (show_friendships)");
-        System.out.println("7.Afiseaza  numarul de comunitati (nr_comunitati)");
-        System.out.println("8.Afiseaza cea mai sociabia comunitate (comunitate_sociabila)");
-        System.out.println("Pentru a afisa meniul ulterior tastati \"meniu\".");
+        System.out.println("============================MENIU==================================");
+        System.out.println("|  0.Iesi din program(exit)                                       |");
+        System.out.println("|  1.Adauga user (add_user firstName lastName)                    |");
+        System.out.println("|  2.Sterge user (rm_user id) - NOT FUNCTIONAL                    |");
+        System.out.println("|  3.Afiseaza useri (show_users)                                  |");
+        System.out.println("|  4.Adauga prietenie (add_friendship idU1 idU2)                  |");
+        System.out.println("|  5.Sterge prietenie (rm_friendship idU1 idU2) - NOT FUNCTIONAL  |");
+        System.out.println("|  6.Afiseaza prietenii (show_friendships)                        |");
+        System.out.println("|  7.Afiseaza  numarul de comunitati (nr_comunitati)              |");
+        System.out.println("|  8.Afiseaza cea mai sociabia comunitate (comunitate_sociabila)  |");
+        System.out.println("|  9.Afiseaza prieteniile unui utilizator dintr-o luna            |");
+        System.out.println("|    (prietenii_luna id luna)                                     |");
+        System.out.println("|  Pentru a afisa meniul ulterior tastati \"meniu\".                |");
+        System.out.println("===================================================================");
     }
 
     public void run() {
@@ -86,6 +102,9 @@ public class Console {
                     case "show_friendships":
                         afiseazaPrietenii(parts);
                         break;
+                    case "prietenii_luna":
+                        prieteniiLuna(parts);
+                        break;
                     default:
                         System.out.println("Comanda invalida!");
                 }
@@ -96,9 +115,22 @@ public class Console {
 
     }
 
+    private void prieteniiLuna(String[] parts) {
+        if(parts.length != 3) {
+            System.out.println("Numar de parametrii invalid!");
+            return;
+        }
+        List<Tuple<Utilizator, String>> prietenii = friendshipsService.prieteniiDinLuna(Long.parseLong(parts[1]),
+                Integer.parseInt(parts[2]));
+        Utilizator utilizator = usersService.find(Long.parseLong(parts[1]));
+        if(prietenii.isEmpty())
+            System.out.format("Nu exista prietenii ale utilizatorului " + utilizator + " in luna %s.\n", parts[2]);
+        prietenii.forEach(Console::afiseazaPrieteniiLuna);
+    }
+
     private void afiseazaPrietenii(String[] parts) {
         if (parts.length != 1) {
-            System.out.println("NUmar de parametrii invalid!");
+            System.out.println("Numar de parametrii invalid!");
             return;
         }
         Iterable<Prietenie> prietenii = friendshipsService.getAll();
@@ -111,7 +143,7 @@ public class Console {
 
     private void afiseazaUseri(String[] parts) {
         if (parts.length != 1) {
-            System.out.println("NUmar de parametrii invalid!");
+            System.out.println("Numar de parametrii invalid!");
             return;
         }
         Iterable<Utilizator> users = usersService.getAll();
@@ -124,7 +156,7 @@ public class Console {
 
     private void comunitateSociabila(String[] parts) {
         if (parts.length != 1) {
-            System.out.println("NUmar de parametrii invalid!");
+            System.out.println("Numar de parametrii invalid!");
             return;
         }
         ArrayList<Integer> list = friendshipsService.biggestConnectedComponent();
@@ -136,7 +168,7 @@ public class Console {
 
     private void nrComunitati(String[] parts) {
         if (parts.length != 1) {
-            System.out.println("NUmar de parametrii invalid!");
+            System.out.println("Numar de parametrii invalid!");
             return;
         }
         System.out.println("Numarul de comunitati din retea este: " + friendshipsService.connectedComponents());
@@ -165,14 +197,14 @@ public class Console {
     }
 
     private void addFriendship(String[] parts) {
-        if (parts.length != 3) {
+        if (parts.length != 4) {
             System.out.println("Numar de parametrii invalid!");
             return;
         }
 
         Utilizator u1 = usersService.find(Long.valueOf(parts[1]));
         Utilizator u2 = usersService.find(Long.valueOf(parts[2]));
-        Prietenie prietenie = new Prietenie(u1, u2);
+        Prietenie prietenie = new Prietenie(u1, u2, parts[3]);
         friendshipsService.add(prietenie);
         System.out.println(prietenie + " cu id-ul " + prietenie.getId() + " adaugata cu succes!");
     }

@@ -6,8 +6,8 @@ import java.util.List;
 import java.util.Objects;
 
 public class Utilizator extends Entity<Long> {
-    private String firstName;
-    private String lastName;
+    private final String firstName;
+    private final String lastName;
     private final List<Utilizator> friends;
 
     public Utilizator(String firstName, String lastName) {
@@ -20,16 +20,8 @@ public class Utilizator extends Entity<Long> {
         return firstName;
     }
 
-    public void setFirstName(String firstName) {
-        this.firstName = firstName;
-    }
-
     public String getLastName() {
         return lastName;
-    }
-
-    public void setLastName(String lastName) {
-        this.lastName = lastName;
     }
 
     public List<Utilizator> getFriends() {
