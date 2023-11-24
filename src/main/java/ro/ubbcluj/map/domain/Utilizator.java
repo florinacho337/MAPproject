@@ -6,8 +6,8 @@ import java.util.List;
 import java.util.Objects;
 
 public class Utilizator extends Entity<Long> {
-    private final String firstName;
-    private final String lastName;
+    private String firstName;
+    private String lastName;
     private final List<Utilizator> friends;
 
     public Utilizator(String firstName, String lastName) {
@@ -30,14 +30,6 @@ public class Utilizator extends Entity<Long> {
 
     public void addFriend(Utilizator u) {
         friends.add(u);
-    }
-
-    public void removeFriend(Utilizator u) {
-        friends.remove(u);
-    }
-
-    public void removeAllFriends(){
-        friends.clear();
     }
 
     @Override

@@ -10,8 +10,8 @@ import java.util.Objects;
  * @param <E2> - tuple second entity type
  */
 public class Tuple<E1, E2> {
-    private E1 e1;
-    private E2 e2;
+    private final E1 e1;
+    private final E2 e2;
 
     public Tuple(E1 e1, E2 e2) {
         this.e1 = e1;
@@ -22,16 +22,8 @@ public class Tuple<E1, E2> {
         return e1;
     }
 
-    public void setLeft(E1 e1) {
-        this.e1 = e1;
-    }
-
     public E2 getRight() {
         return e2;
-    }
-
-    public void setRight(E2 e2) {
-        this.e2 = e2;
     }
 
     @Override
