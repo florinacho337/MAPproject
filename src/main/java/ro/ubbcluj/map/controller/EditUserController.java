@@ -46,10 +46,12 @@ public class EditUserController {
     public void handleSave(){
         String firstName = textFieldFirstName.getText();
         String lastName = textFieldLastName.getText();
+        Long id = Long.valueOf(textFieldId.getText());
         Utilizator u = new Utilizator(firstName, lastName);
         if(type == EditType.SAVE)
             saveUser(u);
         else if (type == EditType.UPDATE) {
+            u.setId(id);
             updateUser(u);
         }
     }
