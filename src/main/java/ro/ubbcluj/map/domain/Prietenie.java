@@ -1,27 +1,26 @@
 package ro.ubbcluj.map.domain;
 
+import ro.ubbcluj.map.utils.Constants;
+
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
 
 public class Prietenie extends Entity<Tuple<Long, Long>> {
 
     LocalDate date;
     Utilizator u1, u2;
-    DateTimeFormatter dateTimeFormatter;
 
     public Prietenie(Utilizator u1, Utilizator u2, String date) {
         this.u1 = u1;
         this.u2 = u2;
-        dateTimeFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
-        this.date = LocalDate.parse(date, dateTimeFormatter);
+        this.date = LocalDate.parse(date, Constants.DATE_TIME_FORMATTER);
     }
 
     public Prietenie(Utilizator u1, Utilizator u2){
         this.u1 = u1;
         this.u2 = u2;
         this.date = LocalDate.now();
+        this.date.format(Constants.DATE_TIME_FORMATTER);
     }
 
     public Utilizator getU2() {

@@ -3,8 +3,8 @@ package ro.ubbcluj.map.service;
 import ro.ubbcluj.map.domain.Prietenie;
 import ro.ubbcluj.map.domain.Tuple;
 import ro.ubbcluj.map.domain.Utilizator;
-import ro.ubbcluj.map.repository.FriendshipDBRepository;
-import ro.ubbcluj.map.repository.UserDBRepository;
+import ro.ubbcluj.map.repository.dbrepositories.FriendshipDBRepository;
+import ro.ubbcluj.map.repository.dbrepositories.UserDBRepository;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -35,7 +35,7 @@ public class FriendshipsService implements Service<Tuple<Long, Long>, Prietenie>
     }
 
     @Override
-    public void add(Prietenie E) {
+    public Prietenie add(Prietenie E) {
         Utilizator u1 = E.getU1();
         Utilizator u2 = E.getU2();
         //pentru evitarea cazurilor (u1, u2) si (u2, u1) considerate prietenii diferite
@@ -47,63 +47,27 @@ public class FriendshipsService implements Service<Tuple<Long, Long>, Prietenie>
 
         E.setId(id);
         if (repoFriendships.save(E).isPresent())
-            throw new DuplicateException("Prietenie deja existenta!");
-        u1.addFriend(u2);
-        u2.addFriend(u1);
+            return E;
+        return null;
     }
 
     @Override
     public Prietenie remove(Tuple<Long, Long> id) {
-        Utilizator u1 = null, u2 = null;
-        if(repoUsers.findOne(id.getLeft()).isPresent())
-            u1 = repoUsers.findOne(id.getLeft()).get();
-        if(repoUsers.findOne(id.getRight()).isPresent())
-            u2 = repoUsers.findOne(id.getRight()).get();
-        if(u1 != null && u2 != null) {
-            u1.removeFriend(u2);
-            u2.removeFriend(u1);
-        }
-        return repoFriendships.delete(id).get();
-    }
-
-    public void removePrietenii(Long id_user) {
-        Utilizator user;
-        List<Utilizator> friends;
-        if(repoUsers.findOne(id_user).isPresent())
-            user = repoUsers.findOne(id_user).get();
-        else {
-            user = null;
-        }
-        friends = Objects.requireNonNull(user).getFriends();
-
-        List<Tuple<Long, Long>> deSters = friends.stream()
-                .map(friend -> collectFriendshipsToRemove(id_user, friend))
-        .toList();
-        deSters.forEach(this::remove);
-        deSters.forEach(id_friend -> {
-            if(Objects.equals(id_friend.getLeft(), id_user))
-                Objects.requireNonNull(user).removeFriend(repoUsers.findOne(id_friend.getRight()).get());
-            else
-                Objects.requireNonNull(user).removeFriend(repoUsers.findOne(id_friend.getLeft()).get());
-        });
-
-
-    }
-
-    private static Tuple<Long, Long> collectFriendshipsToRemove(Long id_user, Utilizator friend) {
-        long id_friend = friend.getId();
-        if(id_user < id_friend)
-            return new Tuple<>(id_user, id_friend);
-        else
-            return new Tuple<>(id_friend, id_user);
-//        deSters.add(id);
-//        friend.removeFriend(finalUser);
+        Optional<Prietenie> prietenie;
+        if((prietenie = repoFriendships.delete(id)).isPresent())
+            return prietenie.get();
+        return null;
     }
 
     @Override
     public Prietenie find(Tuple<Long, Long> id) {
         if(repoFriendships.findOne(id).isPresent())
             return repoFriendships.findOne(id).get();
+        return null;
+    }
+
+    @Override
+    public Prietenie update(Prietenie entity) {
         return null;
     }
 
@@ -191,8 +155,8 @@ public class FriendshipsService implements Service<Tuple<Long, Long>, Prietenie>
         setStartingNode();
         boolean[] visited = new boolean[Math.toIntExact(getMaxID())];
         DFSUtil(startingNode, visited, true, list);
-        if (Objects.equals(list.getFirst(), list.getLast()) && list.size() > 1)
-            list.removeLast();
+        if (Objects.equals(list.get(0), list.get(list.size()-1)) && list.size() > 1)
+            list.remove(list.size()-1);
         return list;
     }
 

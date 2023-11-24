@@ -1,15 +1,16 @@
-package ro.ubbcluj.map.repository;
+package ro.ubbcluj.map.repository.dbrepositories;
 
 import ro.ubbcluj.map.domain.Utilizator;
 import ro.ubbcluj.map.domain.validators.UtilizatorValidator;
 import ro.ubbcluj.map.domain.validators.Validator;
+import ro.ubbcluj.map.repository.Repository;
 
 import java.sql.*;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
-public class UserDBRepository implements Repository<Long, Utilizator>{
+public class UserDBRepository implements Repository<Long, Utilizator> {
 
     private final String url;
     private final String username;
@@ -123,12 +124,37 @@ public class UserDBRepository implements Repository<Long, Utilizator>{
     }
 
     @Override
-    public Optional<Utilizator> delete(Long aLong) {
-        return Optional.empty();
+    public Optional<Utilizator> delete(Long ID) {
+        try(Connection connection = DriverManager.getConnection(url, username, password);
+            PreparedStatement statement = connection.prepareStatement("delete from users where id = ?")
+        ){
+            statement.setInt(1, Math.toIntExact(ID));
+            Optional<Utilizator> user = findOne(ID);
+            int response = statement.executeUpdate();
+            if(response != 0)
+                return user;
+            else
+                return Optional.empty();
+        }catch(SQLException e){
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
     public Optional<Utilizator> update(Utilizator entity) {
-        return Optional.empty();
+        try(Connection connection = DriverManager.getConnection(url, username, password);
+            PreparedStatement statement = connection.prepareStatement("update users set first_name = ?, last_name = ? where id = ?")
+        ){
+            statement.setString(1, entity.getFirstName());
+            statement.setString(2, entity.getLastName());
+            statement.setInt(3, Math.toIntExact(entity.getId()));
+            int response = statement.executeUpdate();
+            if(response != 0)
+                return Optional.empty();
+            else
+                return Optional.of(entity);
+        } catch (SQLException e){
+            throw new RuntimeException(e);
+        }
     }
 }

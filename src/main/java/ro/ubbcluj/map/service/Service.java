@@ -11,7 +11,7 @@ public interface Service<ID, E extends Entity<ID>> {
      * @throws ValidationException if the entity is not valid
      * @throws IllegalArgumentException if the given entity is null.
      */
-    void add(E entity);
+    E add(E entity);
 
     /**
      * removes the entity with the specified id
@@ -29,6 +29,8 @@ public interface Service<ID, E extends Entity<ID>> {
      * @throws IllegalArgumentException if id is null.
      */
     E find(ID id);
+
+    E update(E entity);
 
     /**
      * @return all entities

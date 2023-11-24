@@ -4,8 +4,8 @@ import ro.ubbcluj.map.domain.Prietenie;
 import ro.ubbcluj.map.domain.Tuple;
 import ro.ubbcluj.map.domain.Utilizator;
 import ro.ubbcluj.map.domain.validators.ValidationException;
-import ro.ubbcluj.map.repository.FriendshipDBRepository;
-import ro.ubbcluj.map.repository.UserDBRepository;
+import ro.ubbcluj.map.repository.dbrepositories.FriendshipDBRepository;
+import ro.ubbcluj.map.repository.dbrepositories.UserDBRepository;
 import ro.ubbcluj.map.service.DuplicateException;
 import ro.ubbcluj.map.service.FriendshipsService;
 import ro.ubbcluj.map.service.UsersService;
@@ -48,14 +48,15 @@ public class Console {
         System.out.println("============================MENIU==================================");
         System.out.println("|  0.Iesi din program(exit)                                       |");
         System.out.println("|  1.Adauga user (add_user firstName lastName)                    |");
-        System.out.println("|  2.Sterge user (rm_user id) - NOT FUNCTIONAL                    |");
+        System.out.println("|  2.Sterge user (rm_user id)                                     |");
         System.out.println("|  3.Afiseaza useri (show_users)                                  |");
-        System.out.println("|  4.Adauga prietenie (add_friendship idU1 idU2)                  |");
-        System.out.println("|  5.Sterge prietenie (rm_friendship idU1 idU2) - NOT FUNCTIONAL  |");
-        System.out.println("|  6.Afiseaza prietenii (show_friendships)                        |");
-        System.out.println("|  7.Afiseaza  numarul de comunitati (nr_comunitati)              |");
-        System.out.println("|  8.Afiseaza cea mai sociabia comunitate (comunitate_sociabila)  |");
-        System.out.println("|  9.Afiseaza prieteniile unui utilizator dintr-o luna            |");
+        System.out.println("|  4.Actualizeaza user (update_user id newFirstName newLastName)  |");
+        System.out.println("|  5.Adauga prietenie (add_friendship idU1 idU2)                  |");
+        System.out.println("|  6.Sterge prietenie (rm_friendship idU1 idU2)                   |");
+        System.out.println("|  7.Afiseaza prietenii (show_friendships)                        |");
+        System.out.println("|  8.Afiseaza  numarul de comunitati (nr_comunitati)              |");
+        System.out.println("|  9.Afiseaza cea mai sociabia comunitate (comunitate_sociabila)  |");
+        System.out.println("| 10.Afiseaza prieteniile unui utilizator dintr-o luna            |");
         System.out.println("|    (prietenii_luna id luna)                                     |");
         System.out.println("|  Pentru a afisa meniul ulterior tastati \"meniu\".                |");
         System.out.println("===================================================================");
@@ -105,14 +106,30 @@ public class Console {
                     case "prietenii_luna":
                         prieteniiLuna(parts);
                         break;
+                    case "update_user":
+                        updateUser(parts);
+                        break;
                     default:
                         System.out.println("Comanda invalida!");
                 }
-            } catch (IllegalArgumentException | DuplicateException | ValidationException | NoSuchElementException e) {
+            } catch (IllegalArgumentException | DuplicateException | ValidationException e) {
                 System.out.println(e.getMessage());
             }
         }
 
+    }
+
+    private void updateUser(String[] parts) {
+        if(parts.length != 4) {
+            System.out.println("Numar de parametrii invalid!");
+            return;
+        }
+        Utilizator utilizator = new Utilizator(parts[2], parts[3]);
+        utilizator.setId(Long.valueOf(parts[1]));
+        if(usersService.update(utilizator) == null)
+            System.out.println("Utilizator actualizat cu succes!");
+        else
+            System.out.println("Nu s-a putut actualiza utilizatorul!");
     }
 
     private void prieteniiLuna(String[] parts) {
@@ -182,7 +199,10 @@ public class Console {
 
         Tuple<Long, Long> id = new Tuple<>(Long.valueOf(parts[1]), Long.valueOf(parts[2]));
         Prietenie prietenie = friendshipsService.remove(id);
-        System.out.println(prietenie + " stearsa cu succes!");
+        if(prietenie != null)
+            System.out.println(prietenie + " stearsa cu succes!");
+        else
+            System.out.println("Nu s-a putut sterge prietenia!");
     }
 
     private void addUser(String[] parts) {
@@ -192,21 +212,25 @@ public class Console {
         }
 
         Utilizator utilizator = new Utilizator(parts[1], parts[2]);
-        usersService.add(utilizator);
-        System.out.println(utilizator + " cu id-ul " + utilizator.getId() + " a fost adaugat cu succes!");
+        if(usersService.add(utilizator) == null)
+            System.out.println(utilizator + " a fost adaugat cu succes!");
+        else
+            System.out.println("Utilizatorul este deja existent!");
     }
 
     private void addFriendship(String[] parts) {
-        if (parts.length != 4) {
+        if (parts.length != 3) {
             System.out.println("Numar de parametrii invalid!");
             return;
         }
 
         Utilizator u1 = usersService.find(Long.valueOf(parts[1]));
         Utilizator u2 = usersService.find(Long.valueOf(parts[2]));
-        Prietenie prietenie = new Prietenie(u1, u2, parts[3]);
-        friendshipsService.add(prietenie);
-        System.out.println(prietenie + " cu id-ul " + prietenie.getId() + " adaugata cu succes!");
+        Prietenie prietenie = new Prietenie(u1, u2);
+        if(friendshipsService.add(prietenie)==null)
+            System.out.println(prietenie + " cu id-ul " + prietenie.getId() + " adaugata cu succes!");
+        else
+            System.out.println("Prietenie deja existenta!");
     }
 
     private void removeUser(String[] parts) {
@@ -215,9 +239,11 @@ public class Console {
             return;
         }
 
-        friendshipsService.removePrietenii(Long.parseLong(parts[1]));
         Utilizator user_sters = usersService.remove(Long.parseLong(parts[1]));
-        System.out.println(user_sters + " si prieteniile acestuia au fost sterse cu succes!");
+        if(user_sters != null)
+            System.out.println(user_sters + " si prieteniile acestuia au fost sterse cu succes!");
+        else
+            System.out.println("Utilizatorul nu a putut fi sters!");
     }
 
 }

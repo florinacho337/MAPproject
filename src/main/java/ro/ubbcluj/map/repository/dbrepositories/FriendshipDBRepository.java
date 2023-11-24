@@ -1,10 +1,11 @@
-package ro.ubbcluj.map.repository;
+package ro.ubbcluj.map.repository.dbrepositories;
 
 import ro.ubbcluj.map.domain.Prietenie;
 import ro.ubbcluj.map.domain.Tuple;
 import ro.ubbcluj.map.domain.Utilizator;
 import ro.ubbcluj.map.domain.validators.PrietenieValidator;
 import ro.ubbcluj.map.domain.validators.Validator;
+import ro.ubbcluj.map.repository.Repository;
 
 import java.sql.*;
 import java.time.format.DateTimeFormatter;
@@ -115,12 +116,23 @@ public class FriendshipDBRepository implements Repository<Tuple<Long, Long>, Pri
     }
 
     @Override
-    public Optional<Prietenie> delete(Tuple<Long, Long> longLongTuple) {
-        return Optional.empty();
+    public Optional<Prietenie> delete(Tuple<Long, Long> ID) {
+        try(Connection connection = DriverManager.getConnection(url, username, password);
+            PreparedStatement statement = connection.prepareStatement("delete from friendships where id_u1 = ? and id_u2 = ?")
+        ){
+            statement.setInt(1, Math.toIntExact(ID.getLeft()));
+            statement.setInt(2, Math.toIntExact(ID.getRight()));
+            Optional<Prietenie> prietenie = findOne(ID);
+            int response = statement.executeUpdate();
+            if(response != 0)
+                return prietenie;
+            else
+                return Optional.empty();
+        }catch(SQLException e){
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
-    public Optional<Prietenie> update(Prietenie entity) {
-        return Optional.empty();
-    }
+    public Optional<Prietenie> update(Prietenie entity) {return Optional.empty();}
 }
