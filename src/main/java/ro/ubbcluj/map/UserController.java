@@ -9,49 +9,83 @@ import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import ro.ubbcluj.map.controller.EditUserController;
+import ro.ubbcluj.map.controller.FriendshipsController;
 import ro.ubbcluj.map.controller.MessageAlert;
-import ro.ubbcluj.map.domain.Utilizator;
+import ro.ubbcluj.map.domain.entities.FriendRequest;
+import ro.ubbcluj.map.domain.entities.Utilizator;
+import ro.ubbcluj.map.domain.entities.dtos.FriendRequestDTO;
+import ro.ubbcluj.map.service.FriendshipsService;
 import ro.ubbcluj.map.service.UsersService;
 import ro.ubbcluj.map.utils.events.UtilizatorChangeEvent;
+import ro.ubbcluj.map.utils.exceptions.DuplicateException;
 import ro.ubbcluj.map.utils.observer.Observer;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.StreamSupport;
 
 public class UserController implements Observer<UtilizatorChangeEvent> {
+
     UsersService usersService;
-    ObservableList<Utilizator> model = FXCollections.observableArrayList();
+    FriendshipsService friendshipsService;
+    ObservableList<Utilizator> modelUsers = FXCollections.observableArrayList();
+    ObservableList<FriendRequestDTO> modelFR = FXCollections.observableArrayList();
     @FXML
-    private TableView<Utilizator> tableView;
+    private TableView<Utilizator> tableViewUsers;
     @FXML
     private TableColumn<Utilizator, String> tableColumnFirstName;
     @FXML
     private TableColumn<Utilizator, String> tableColumnLastName;
+    @FXML
+    private TableColumn<Utilizator, Long> tableColumnId;
+    @FXML
+    private TableColumn<FriendRequestDTO, String> tableColumnStatus;
+    @FXML
+    private TableColumn<FriendRequestDTO, Long> tableColumnFrom;
+    @FXML
+    private TableColumn<FriendRequestDTO, Long> tableColumnTo;
+    @FXML
+    private TableView<FriendRequestDTO> tableViewFriendRequest;
+
+    @FXML
+    private TextField textFieldSetUser;
+
     private Stage stage;
 
-    public void setUsersService(UsersService usersService, Stage stage){
+    public void setUsersService(UsersService usersService, FriendshipsService friendshipsService, Stage stage){
+        this.friendshipsService = friendshipsService;
         this.usersService = usersService;
         this.stage = stage;
         usersService.addObserver(this);
+        friendshipsService.addObserver(this);
         initModel();
     }
 
     @FXML
     public void initialize() {
+        tableColumnId.setCellValueFactory(new PropertyValueFactory<>("id"));
         tableColumnFirstName.setCellValueFactory(new PropertyValueFactory<>("firstName"));
         tableColumnLastName.setCellValueFactory(new PropertyValueFactory<>("lastName"));
-        tableView.setItems(model);
+        tableColumnStatus.setCellValueFactory(new PropertyValueFactory<>("status"));
+        tableColumnFrom.setCellValueFactory(new PropertyValueFactory<>("from"));
+        tableColumnTo.setCellValueFactory(new PropertyValueFactory<>("to"));
+        tableViewUsers.setItems(modelUsers);
+        tableViewFriendRequest.setItems(modelFR);
     }
 
     private void initModel() {
         Iterable<Utilizator> users = usersService.getAll();
+        Iterable<FriendRequest> friendRequests = friendshipsService.getFriendRequests();
         List<Utilizator> usersList = StreamSupport.stream(users.spliterator(), false).toList();
-        model.setAll(usersList);
+        List<FriendRequestDTO> friendRequestDTOList = StreamSupport.stream(friendRequests.spliterator(), false).map(FriendRequestDTO::new).toList();
+        modelUsers.setAll(usersList);
+        modelFR.setAll(friendRequestDTOList);
     }
 
     @Override
@@ -64,7 +98,7 @@ public class UserController implements Observer<UtilizatorChangeEvent> {
     }
 
     public void onUpdateButtonClick(ActionEvent actionEvent) {
-        Utilizator user = tableView.getSelectionModel().getSelectedItem();
+        Utilizator user = tableViewUsers.getSelectionModel().getSelectedItem();
         if(user != null)
             showEditUserDialog(user);
         else
@@ -90,7 +124,7 @@ public class UserController implements Observer<UtilizatorChangeEvent> {
     }
 
     public void onDeleteButtonClick(ActionEvent actionEvent){
-        Utilizator selected = tableView.getSelectionModel().getSelectedItem();
+        Utilizator selected = tableViewUsers.getSelectionModel().getSelectedItem();
         if (selected != null) {
             Utilizator deleted = usersService.remove(selected.getId());
             if (null != deleted)
@@ -100,5 +134,81 @@ public class UserController implements Observer<UtilizatorChangeEvent> {
 
     public void handleExit(ActionEvent actionEvent) {
         stage.close();
+    }
+
+    public void handleSendFR(ActionEvent actionEvent) {
+        if(Objects.equals(textFieldSetUser.getText(), ""))
+            MessageAlert.showErrorMessage(null, "Nu ati selectat utilizatorul curent!");
+        Utilizator to = tableViewUsers.getSelectionModel().getSelectedItem();
+        Utilizator from = usersService.find(Long.valueOf(textFieldSetUser.getText()));
+        if(friendshipsService.sendFriendRequest(from, to) == null)
+            MessageAlert.showMessage(null, Alert.AlertType.INFORMATION, "Friend Request", "Cerere de prietenie trimisa cu succes!");
+        else
+            MessageAlert.showErrorMessage(null, "Cerere de prietenie existenta!");
+    }
+
+    public void handleAccept(ActionEvent actionEvent) {
+        try {
+            FriendRequest friendRequest = tableViewFriendRequest.getSelectionModel().getSelectedItem().getFriendRequest();
+            if (Objects.equals(friendRequest.getStatus(), "approved") || Objects.equals(friendRequest.getStatus(), "rejected"))
+                MessageAlert.showErrorMessage(null, "Cererea de prietenie a fost deja acceptata sau refuzata!");
+            else {
+                friendRequest = friendshipsService.acceptFriendRequest(friendRequest);
+                if (friendRequest == null)
+                    MessageAlert.showErrorMessage(null, "Cerere de prietenie inexistenta!");
+                else
+                    MessageAlert.showMessage(null, Alert.AlertType.INFORMATION, "Accept", "Cerere de prietenie acceptata!");
+            }
+        }catch (DuplicateException e){
+            MessageAlert.showErrorMessage(null, e.getMessage());
+        }
+    }
+
+    public void handleReject(ActionEvent actionEvent) {
+        FriendRequest friendRequest = tableViewFriendRequest.getSelectionModel().getSelectedItem().getFriendRequest();
+        if(Objects.equals(friendRequest.getStatus(), "approved") || Objects.equals(friendRequest.getStatus(), "rejected"))
+            MessageAlert.showErrorMessage(null, "Cererea de prietenie a fost deja acceptata sau refuzata!");
+        else {
+            friendRequest = friendshipsService.rejectFriendRequest(friendRequest);
+            if (friendRequest == null)
+                MessageAlert.showErrorMessage(null, "Cerere de prietenie inexistenta!");
+            else
+                MessageAlert.showMessage(null, Alert.AlertType.INFORMATION, "Reject", "Cerere de prietenie refuzata!");
+        }
+    }
+
+    public void handleSetUser(ActionEvent actionEvent) {
+        Utilizator utilizator = tableViewUsers.getSelectionModel().getSelectedItem();
+        if (utilizator != null) {
+            textFieldSetUser.setText(String.valueOf(utilizator.getId()));
+        } else MessageAlert.showErrorMessage(null, "Nu ati selectat nici un utilizator!");
+    }
+
+    public void handleShowFriends(ActionEvent actionEvent) {
+        if(Objects.equals(textFieldSetUser.getText(), ""))
+            MessageAlert.showErrorMessage(null, "Nu exista un utilizator curent!");
+        else {
+            Long id = Long.valueOf(textFieldSetUser.getText());
+            Utilizator user = usersService.find(id);
+            showFriendshipDialog(user);
+        }
+    }
+
+    private void showFriendshipDialog(Utilizator user) {
+        try {
+            FXMLLoader loader = new FXMLLoader(UserController.class.getResource("friendship-view.fxml"));
+
+            Stage dialogStage = new Stage();
+            dialogStage.setTitle("Prietenii");
+            dialogStage.initModality(Modality.WINDOW_MODAL);
+            dialogStage.setScene(new Scene(loader.load()));
+
+            FriendshipsController controller = loader.getController();
+            controller.setService(friendshipsService, dialogStage, user);
+
+            dialogStage.show();
+        } catch (IOException e){
+            e.printStackTrace();
+        }
     }
 }

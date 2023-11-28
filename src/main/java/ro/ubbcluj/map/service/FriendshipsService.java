@@ -1,27 +1,38 @@
 package ro.ubbcluj.map.service;
 
-import ro.ubbcluj.map.domain.Prietenie;
-import ro.ubbcluj.map.domain.Tuple;
-import ro.ubbcluj.map.domain.Utilizator;
+import ro.ubbcluj.map.domain.entities.FriendRequest;
+import ro.ubbcluj.map.domain.entities.Prietenie;
+import ro.ubbcluj.map.domain.entities.Tuple;
+import ro.ubbcluj.map.domain.entities.Utilizator;
+import ro.ubbcluj.map.repository.dbrepositories.FriendRequestDBRepo;
 import ro.ubbcluj.map.repository.dbrepositories.FriendshipDBRepository;
 import ro.ubbcluj.map.repository.dbrepositories.UserDBRepository;
+import ro.ubbcluj.map.utils.Constants;
+import ro.ubbcluj.map.utils.events.ChangeEventType;
+import ro.ubbcluj.map.utils.events.UtilizatorChangeEvent;
+import ro.ubbcluj.map.utils.exceptions.DuplicateException;
+import ro.ubbcluj.map.utils.observer.Observable;
+import ro.ubbcluj.map.utils.observer.Observer;
 
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
+import java.time.LocalDateTime;
 import java.util.*;
 
-public class FriendshipsService implements Service<Tuple<Long, Long>, Prietenie> {
+public class FriendshipsService implements Service<Tuple<Long, Long>, Prietenie>, Observable<UtilizatorChangeEvent> {
 //    InMemoryRepository<Tuple<Long, Long>, Prietenie> repoFriendships;
 //    InMemoryRepository<Long, Utilizator> repoUsers;
+//    InMemoryRepository<Long, FriendRequest> repoFriendRequests;
 
     FriendshipDBRepository repoFriendships;
     UserDBRepository repoUsers;
+    FriendRequestDBRepo repoFriendRequests;
     int startingNode;
     private static long maxID;
+    private final List<Observer<UtilizatorChangeEvent>> observers = new ArrayList<>();
 
-    public FriendshipsService(FriendshipDBRepository repoFriendships, UserDBRepository repoUsers) {
+    public FriendshipsService(FriendshipDBRepository repoFriendships, UserDBRepository repoUsers, FriendRequestDBRepo repoFriendRequests) {
         this.repoFriendships = repoFriendships;
         this.repoUsers = repoUsers;
+        this.repoFriendRequests = repoFriendRequests;
     }
 
     private long getMaxID() {
@@ -47,23 +58,25 @@ public class FriendshipsService implements Service<Tuple<Long, Long>, Prietenie>
 
         E.setId(id);
         if (repoFriendships.save(E).isPresent())
-            return E;
+            throw new DuplicateException("Prietenie deja existenta!");
+        notifyObservers(new UtilizatorChangeEvent(ChangeEventType.ADD, null));
         return null;
     }
 
     @Override
     public Prietenie remove(Tuple<Long, Long> id) {
         Optional<Prietenie> prietenie;
-        if((prietenie = repoFriendships.delete(id)).isPresent())
+        if((prietenie = repoFriendships.delete(id)).isPresent()) {
+            notifyObservers(new UtilizatorChangeEvent(ChangeEventType.DELETE, null));
             return prietenie.get();
+        }
         return null;
     }
 
     @Override
     public Prietenie find(Tuple<Long, Long> id) {
-        if(repoFriendships.findOne(id).isPresent())
-            return repoFriendships.findOne(id).get();
-        return null;
+        Optional<Prietenie> prietenie = repoFriendships.findOne(id);
+        return prietenie.orElse(null);
     }
 
     @Override
@@ -183,14 +196,68 @@ public class FriendshipsService implements Service<Tuple<Long, Long>, Prietenie>
             prietenie = repoFriendships.findOne(id_prietenie).get();
         Utilizator u1 = Objects.requireNonNull(prietenie).getU1();
         Utilizator u2 = prietenie.getU2();
-        LocalDate friendsFrom = prietenie.getDate();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+        LocalDateTime friendsFrom = prietenie.getDate();
         if(friendsFrom.getMonth().getValue() == luna) {
             if (id_user.equals(u1.getId()))
-                return new Tuple<>(u2, friendsFrom.format(formatter));
+                return new Tuple<>(u2, friendsFrom.format(Constants.DATE_TIME_FORMATTER));
             else
-                return new Tuple<>(u1, friendsFrom.format(formatter));
+                return new Tuple<>(u1, friendsFrom.format(Constants.DATE_TIME_FORMATTER));
         }
         return null;
+    }
+
+    public FriendRequest sendFriendRequest(Utilizator from, Utilizator to){
+        FriendRequest friendRequest = new FriendRequest(from, to);
+        long id = 0;
+        while(repoFriendRequests.findOne(id).isPresent())
+            id++;
+        friendRequest.setId(id);
+        Optional<FriendRequest> friendRequest1 = repoFriendRequests.save(friendRequest);
+        if(friendRequest1.isPresent())
+            return friendRequest1.get();
+        notifyObservers(new UtilizatorChangeEvent(ChangeEventType.ADD, null));
+        return null;
+    }
+
+    public FriendRequest acceptFriendRequest(FriendRequest friendRequest){
+        if(friendRequest == null)
+            return null;
+        add(new Prietenie(friendRequest.getFrom(), friendRequest.getTo()));
+        friendRequest.setStatus("approved");
+        repoFriendRequests.update(friendRequest);
+        notifyObservers(new UtilizatorChangeEvent(ChangeEventType.UPDATE, null));
+        return friendRequest;
+    }
+
+    public FriendRequest rejectFriendRequest(FriendRequest friendRequest){
+        if(friendRequest == null)
+            return null;
+        friendRequest.setStatus("rejected");
+        repoFriendRequests.update(friendRequest);
+        notifyObservers(new UtilizatorChangeEvent(ChangeEventType.UPDATE, null));
+        return friendRequest;
+    }
+
+    public FriendRequest findFriendRequest(Long id){
+        if(repoFriendRequests.findOne(id).isPresent())
+            return repoFriendRequests.findOne(id).get();
+        return null;
+    }
+
+    public Iterable<FriendRequest> getFriendRequests(){return repoFriendRequests.findAll();}
+
+    @Override
+    public void addObserver(Observer<UtilizatorChangeEvent> e) {
+        observers.add(e);
+    }
+
+    @Override
+    public void removeObserver(Observer<UtilizatorChangeEvent> e) {
+        observers.remove(e);
+    }
+
+    @Override
+    public void notifyObservers(UtilizatorChangeEvent t) {
+        observers.forEach(x -> x.update(t));
     }
 }

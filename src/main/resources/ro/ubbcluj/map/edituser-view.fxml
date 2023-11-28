@@ -2,29 +2,32 @@
 
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<VBox xmlns="http://javafx.com/javafx"
-      xmlns:fx="http://javafx.com/fxml"
-      fx:controller="ro.ubbcluj.map.controller.EditUserController"
-      prefHeight="400.0" prefWidth="500.0">
-    <GridPane hgap="5.0" layoutX="50.0" prefHeight="207.0" prefWidth="373.0" vgap="5.0"
-              AnchorPane.bottomAnchor="140.0" AnchorPane.leftAnchor="50.0" AnchorPane.rightAnchor="49.0"
-              AnchorPane.topAnchor="10.0" alignment="CENTER">
-        <Label prefHeight="47.0" prefWidth="187.0" text="Id User:"/>
-        <Label prefHeight="47.0" prefWidth="187.0" text="First Name" GridPane.rowIndex="1"/>
-        <Label prefHeight="47.0" prefWidth="187.0" text="Last Name" GridPane.rowIndex="2"/>
+
+<VBox prefHeight="400.0" prefWidth="500.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ro.ubbcluj.map.controller.EditUserController">
+    <GridPane alignment="CENTER" hgap="5.0" layoutX="50.0" prefHeight="207.0" prefWidth="373.0" vgap="5.0" AnchorPane.bottomAnchor="140.0" AnchorPane.leftAnchor="50.0" AnchorPane.rightAnchor="49.0" AnchorPane.topAnchor="10.0">
+        <Label prefHeight="47.0" prefWidth="187.0" text="Id User:" />
+        <Label prefHeight="44.0" prefWidth="187.0" text="First Name" GridPane.rowIndex="1" />
+        <Label prefHeight="47.0" prefWidth="187.0" text="Last Name" GridPane.rowIndex="2" />
 
 
-        <TextField fx:id="textFieldId" prefHeight="46.0" prefWidth="186.0" GridPane.columnIndex="1"/>
-        <TextField fx:id="textFieldFirstName" prefHeight="48.0" prefWidth="186.0" GridPane.columnIndex="1"
-                   GridPane.rowIndex="1"/>
-        <TextField fx:id="textFieldLastName" prefHeight="49.0" prefWidth="186.0" GridPane.columnIndex="1"
-                   GridPane.rowIndex="2"/>
+        <TextField fx:id="textFieldId" prefHeight="46.0" prefWidth="186.0" GridPane.columnIndex="1" />
+        <TextField fx:id="textFieldFirstName" prefHeight="48.0" prefWidth="186.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+        <TextField fx:id="textFieldLastName" prefHeight="49.0" prefWidth="186.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+      <columnConstraints>
+         <ColumnConstraints />
+         <ColumnConstraints />
+      </columnConstraints>
+      <rowConstraints>
+         <RowConstraints />
+         <RowConstraints />
+         <RowConstraints />
+      </rowConstraints>
     </GridPane>
     <HBox alignment="CENTER">
-        <ButtonBar layoutX="10.0" layoutY="12.0" prefWidth="200.0" prefHeight="40.0">
+        <ButtonBar layoutX="10.0" layoutY="12.0" prefHeight="40.0" prefWidth="200.0">
             <buttons>
-                <Button onAction="#handleSave" text="Save"/>
-                <Button onAction="#handleCancel" text="Cancel"/>
+                <Button onAction="#handleSave" prefHeight="24.0" prefWidth="123.0" text="Save" />
+                <Button onAction="#handleCancel" text="Cancel" />
             </buttons>
         </ButtonBar>
     </HBox>

@@ -4,9 +4,9 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
-import ro.ubbcluj.map.domain.Utilizator;
-import ro.ubbcluj.map.domain.validators.ValidationException;
+import ro.ubbcluj.map.domain.entities.Utilizator;
 import ro.ubbcluj.map.service.UsersService;
+import ro.ubbcluj.map.utils.exceptions.ValidationException;
 
 public class EditUserController {
     @FXML

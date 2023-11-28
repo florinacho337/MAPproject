@@ -1,6 +1,7 @@
 package ro.ubbcluj.map.domain.validators;
 
-import ro.ubbcluj.map.domain.Utilizator;
+import ro.ubbcluj.map.domain.entities.Utilizator;
+import ro.ubbcluj.map.utils.exceptions.ValidationException;
 
 import java.util.Objects;
 

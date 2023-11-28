@@ -1,7 +1,6 @@
 package ro.ubbcluj.map.service;
 
-import ro.ubbcluj.map.domain.Entity;
-import ro.ubbcluj.map.domain.validators.ValidationException;
+import ro.ubbcluj.map.domain.entities.Entity;
 
 public interface Service<ID, E extends Entity<ID>> {
     /**

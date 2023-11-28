@@ -1,4 +1,4 @@
-package ro.ubbcluj.map.domain;
+package ro.ubbcluj.map.domain.entities;
 
 import java.util.Objects;
 
