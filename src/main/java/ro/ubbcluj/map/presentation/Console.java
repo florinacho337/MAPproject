@@ -1,21 +1,24 @@
 package ro.ubbcluj.map.presentation;
 
-import ro.ubbcluj.map.domain.Prietenie;
-import ro.ubbcluj.map.domain.Tuple;
-import ro.ubbcluj.map.domain.Utilizator;
-import ro.ubbcluj.map.domain.validators.ValidationException;
+import ro.ubbcluj.map.domain.entities.*;
+import ro.ubbcluj.map.domain.validators.*;
+import ro.ubbcluj.map.repository.InMemoryRepository;
+import ro.ubbcluj.map.repository.dbrepositories.FriendRequestDBRepo;
 import ro.ubbcluj.map.repository.dbrepositories.FriendshipDBRepository;
 import ro.ubbcluj.map.repository.dbrepositories.UserDBRepository;
-import ro.ubbcluj.map.service.DuplicateException;
 import ro.ubbcluj.map.service.FriendshipsService;
 import ro.ubbcluj.map.service.UsersService;
+import ro.ubbcluj.map.utils.exceptions.DuplicateException;
+import ro.ubbcluj.map.utils.exceptions.ValidationException;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.Scanner;
 import java.util.stream.StreamSupport;
 
 public class Console {
     private final FriendshipsService friendshipsService;
-//    UsersService usersService;
     private final UsersService usersService;
     private static final Console instance = new Console();
 
@@ -25,12 +28,17 @@ public class Console {
         String password = "postgres";
 //        UtilizatorValidator validatorUser = new UtilizatorValidator();
 //        PrietenieValidator validatorFriendship = new PrietenieValidator();
+//        FriendRequestValidator friendRequestValidator = new FriendRequestValidator();
+//        MessageValidator messageValidator = new MessageValidator();
 //        InMemoryRepository<Long, Utilizator> repoUsers = new InMemoryRepository<>(validatorUser);
 //        InMemoryRepository<Tuple<Long, Long>, Prietenie> repoFriendships = new InMemoryRepository<>(validatorFriendship);
+//        InMemoryRepository<Long, FriendRequest> repoFriendRequest = new InMemoryRepository<>(friendRequestValidator);
+//        InMemoryRepository<Long, Message> repoMessages = new InMemoryRepository<>(messageValidator);
         UserDBRepository repoUsers = new UserDBRepository(url, username, password);
         FriendshipDBRepository repoFriendships = new FriendshipDBRepository(url, username, password);
+        FriendRequestDBRepo repoFriendRequest = new FriendRequestDBRepo(url, username, password);
         usersService = new UsersService(repoUsers);
-        friendshipsService = new FriendshipsService(repoFriendships, repoUsers);
+        friendshipsService = new FriendshipsService(repoFriendships, repoUsers, repoFriendRequest);
     }
 
     public static Console getInstance() {
@@ -58,6 +66,12 @@ public class Console {
         System.out.println("|  9.Afiseaza cea mai sociabia comunitate (comunitate_sociabila)  |");
         System.out.println("| 10.Afiseaza prieteniile unui utilizator dintr-o luna            |");
         System.out.println("|    (prietenii_luna id luna)                                     |");
+        System.out.println("| 11.Afiseaza cereri de prietenie (show_friend_requests)          |");
+        System.out.println("| 12.Trimite cerere de prietenie (friend_request id_from id_to)   |");
+        System.out.println("| 13.Accepta cerere de prietenie                                  |");
+        System.out.println("|    (accept_friend_request idFriendRequest)                      |");
+        System.out.println("| 14.Refuza cerere de prietenie                                   |");
+        System.out.println("|    (reject_friend_request idFriendRequest)                      |");
         System.out.println("|  Pentru a afisa meniul ulterior tastati \"meniu\".                |");
         System.out.println("===================================================================");
     }
@@ -109,14 +123,86 @@ public class Console {
                     case "update_user":
                         updateUser(parts);
                         break;
+                    case "friend_request":
+                        friendRequest(parts);
+                        break;
+                    case "show_friend_requests":
+                        showFriendRequests(parts);
+                        break;
+                    case "accept_friend_request":
+                        acceptFriendRequest(parts);
+                        break;
+                    case "reject_friend_request":
+                        rejectFriendRequest(parts);
+                        break;
                     default:
                         System.out.println("Comanda invalida!");
                 }
-            } catch (IllegalArgumentException | DuplicateException | ValidationException e) {
+            } catch (IllegalArgumentException | ValidationException | DuplicateException e) {
                 System.out.println(e.getMessage());
             }
         }
 
+    }
+
+    private void rejectFriendRequest(String[] parts) {
+        if(parts.length != 2) {
+            System.out.println("Numar de parametrii invalid!");
+            return;
+        }
+        FriendRequest friendRequest = friendshipsService.findFriendRequest(Long.valueOf(parts[1]));
+        if(Objects.equals(friendRequest.getStatus(), "approved") || Objects.equals(friendRequest.getStatus(), "rejected")) {
+            System.out.println("Cererea de prietenie a fost deja acceptata sau refuzata!");
+            return;
+        }
+        friendRequest = friendshipsService.rejectFriendRequest(friendRequest);
+        if(friendRequest == null)
+            System.out.println("Cerere de prietenie inexistenta!");
+        else
+            System.out.println("Cerere de prietenie refuzata!");
+    }
+
+    private void acceptFriendRequest(String[] parts) {
+        if(parts.length != 2) {
+            System.out.println("Numar de parametrii invalid!");
+            return;
+        }
+        FriendRequest friendRequest = friendshipsService.findFriendRequest(Long.valueOf(parts[1]));
+        if(Objects.equals(friendRequest.getStatus(), "approved") || Objects.equals(friendRequest.getStatus(), "rejected")) {
+            System.out.println("Cererea de prietenie a fost deja acceptata sau refuzata!");
+            return;
+        }
+        friendRequest = friendshipsService.acceptFriendRequest(friendRequest);
+        if(friendRequest == null)
+            System.out.println("Cerere de prietenie inexistenta!");
+        else
+            System.out.println("Cerere de prietenie acceptata!");
+    }
+
+    private void showFriendRequests(String[] parts) {
+        if(parts.length != 1) {
+            System.out.println("Numar de parametrii invalid!");
+            return;
+        }
+        Iterable<FriendRequest> friendRequests = friendshipsService.getFriendRequests();
+        if (StreamSupport.stream(friendRequests.spliterator(), false).findAny().isEmpty()) {
+            System.out.println("Nu exista cereri de prietenie!");
+            return;
+        }
+        friendRequests.forEach(System.out::println);
+    }
+
+    private void friendRequest(String[] parts) {
+        if(parts.length != 3) {
+            System.out.println("Numar de parametrii invalid!");
+            return;
+        }
+        Utilizator from = usersService.find(Long.valueOf(parts[1]));
+        Utilizator to = usersService.find(Long.valueOf(parts[2]));
+        if(friendshipsService.sendFriendRequest(from, to) == null)
+            System.out.println("Cerere de prietenie trimisa cu succes!");
+        else
+            System.out.println("Cerere de prietenie existenta!");
     }
 
     private void updateUser(String[] parts) {
@@ -227,10 +313,8 @@ public class Console {
         Utilizator u1 = usersService.find(Long.valueOf(parts[1]));
         Utilizator u2 = usersService.find(Long.valueOf(parts[2]));
         Prietenie prietenie = new Prietenie(u1, u2);
-        if(friendshipsService.add(prietenie)==null)
-            System.out.println(prietenie + " cu id-ul " + prietenie.getId() + " adaugata cu succes!");
-        else
-            System.out.println("Prietenie deja existenta!");
+        friendshipsService.add(prietenie);
+        System.out.println(prietenie + " cu id-ul " + prietenie.getId() + " adaugata cu succes!");
     }
 
     private void removeUser(String[] parts) {

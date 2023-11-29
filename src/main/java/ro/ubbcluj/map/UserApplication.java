@@ -4,19 +4,26 @@ import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+import ro.ubbcluj.map.repository.dbrepositories.FriendRequestDBRepo;
+import ro.ubbcluj.map.repository.dbrepositories.FriendshipDBRepository;
 import ro.ubbcluj.map.repository.dbrepositories.UserDBRepository;
+import ro.ubbcluj.map.service.FriendshipsService;
 import ro.ubbcluj.map.service.UsersService;
 
 import java.io.IOException;
 
 public class UserApplication extends Application {
     private UsersService usersService;
+    private FriendshipsService friendshipsService;
     @Override
     public void start(Stage primaryStage) throws Exception {
         String url = "jdbc:postgresql://localhost:5432/socialnetwork";
         String username = "postgres";
         String password = "postgres";
         UserDBRepository repoUsers = new UserDBRepository(url, username, password);
+        FriendRequestDBRepo friendRequestDBRepo = new FriendRequestDBRepo(url, username, password);
+        FriendshipDBRepository friendshipDBRepository = new FriendshipDBRepository(url, username, password);
+        friendshipsService = new FriendshipsService(friendshipDBRepository, repoUsers, friendRequestDBRepo);
         usersService = new UsersService(repoUsers);
 
         initView(primaryStage);
@@ -28,7 +35,7 @@ public class UserApplication extends Application {
         primaryStage.setScene(new Scene(usersLoader.load()));
 
         UserController userController = usersLoader.getController();
-        userController.setUsersService(usersService, primaryStage);
+        userController.setUsersService(usersService, friendshipsService, primaryStage);
 
     }
 

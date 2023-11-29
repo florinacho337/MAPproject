@@ -1,6 +1,6 @@
 package ro.ubbcluj.map.domain.validators;
 
-import ro.ubbcluj.map.domain.Prietenie;
+import ro.ubbcluj.map.domain.entities.Prietenie;
 
 import java.util.Objects;
 

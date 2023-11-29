@@ -1,6 +1,6 @@
 package ro.ubbcluj.map.repository;
 
-import ro.ubbcluj.map.domain.Entity;
+import ro.ubbcluj.map.domain.entities.Entity;
 import ro.ubbcluj.map.domain.validators.ValidationException;
 
 import java.util.Optional;

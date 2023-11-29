@@ -1,6 +1,6 @@
 package ro.ubbcluj.map.utils.events;
 
-import ro.ubbcluj.map.domain.Utilizator;
+import ro.ubbcluj.map.domain.entities.Utilizator;
 
 public class UtilizatorChangeEvent implements Event {
     private final ChangeEventType type;

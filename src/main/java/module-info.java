@@ -7,8 +7,9 @@ module ro.ubbcluj.map {
     requires java.sql;
 
     opens ro.ubbcluj.map to javafx.fxml;
-    opens ro.ubbcluj.map.domain to javafx.base;
     opens ro.ubbcluj.map.controller to javafx.fxml;
     exports ro.ubbcluj.map.controller;
     exports ro.ubbcluj.map;
+    opens ro.ubbcluj.map.domain.entities to javafx.base;
+    opens ro.ubbcluj.map.domain.entities.dtos to javafx.base;
 }

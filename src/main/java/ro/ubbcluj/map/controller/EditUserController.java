@@ -4,7 +4,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
-import ro.ubbcluj.map.domain.Utilizator;
+import ro.ubbcluj.map.domain.entities.Utilizator;
 import ro.ubbcluj.map.domain.validators.ValidationException;
 import ro.ubbcluj.map.service.UsersService;
 
@@ -44,9 +44,11 @@ public class EditUserController {
 
     @FXML
     public void handleSave(){
+        Long id = Long.valueOf(textFieldId.getText());
         String firstName = textFieldFirstName.getText();
         String lastName = textFieldLastName.getText();
         Utilizator u = new Utilizator(firstName, lastName);
+        u.setId(id);
         if(type == EditType.SAVE)
             saveUser(u);
         else if (type == EditType.UPDATE) {

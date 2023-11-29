@@ -1,6 +1,6 @@
 package ro.ubbcluj.map.service;
 
-import ro.ubbcluj.map.domain.Utilizator;
+import ro.ubbcluj.map.domain.entities.Utilizator;
 import ro.ubbcluj.map.repository.dbrepositories.UserDBRepository;
 import ro.ubbcluj.map.utils.events.ChangeEventType;
 import ro.ubbcluj.map.utils.events.UtilizatorChangeEvent;
