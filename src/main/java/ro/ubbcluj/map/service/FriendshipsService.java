@@ -16,6 +16,8 @@ import ro.ubbcluj.map.utils.observer.Observer;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.function.Predicate;
+import java.util.stream.StreamSupport;
 
 public class FriendshipsService implements Service<Tuple<Long, Long>, Prietenie>, Observable<UtilizatorChangeEvent> {
 //    InMemoryRepository<Tuple<Long, Long>, Prietenie> repoFriendships;
@@ -207,6 +209,15 @@ public class FriendshipsService implements Service<Tuple<Long, Long>, Prietenie>
     }
 
     public FriendRequest sendFriendRequest(Utilizator from, Utilizator to){
+        Predicate<FriendRequest> exista = friendRequest -> {
+            if(Objects.equals(friendRequest.getFrom().getId(), from.getId()) && Objects.equals(friendRequest.getTo().getId(), to.getId()) && !Objects.equals(friendRequest.getStatus(), "rejected"))
+                return true;
+            return Objects.equals(friendRequest.getTo().getId(), from.getId()) && Objects.equals(friendRequest.getFrom().getId(), to.getId()) && !Objects.equals(friendRequest.getStatus(), "rejected");
+        };
+        List <FriendRequest> friendRequests = StreamSupport.stream(getFriendRequests().spliterator(), false)
+                .filter(exista).toList();
+        if (!friendRequests.isEmpty())
+            throw new DuplicateException("Exista o cerere de prietenie acceptata sau in curs de raspuns!");
         FriendRequest friendRequest = new FriendRequest(from, to);
         long id = 0;
         while(repoFriendRequests.findOne(id).isPresent())
@@ -222,11 +233,26 @@ public class FriendshipsService implements Service<Tuple<Long, Long>, Prietenie>
     public FriendRequest acceptFriendRequest(FriendRequest friendRequest){
         if(friendRequest == null)
             return null;
+        Predicate<FriendRequest> exista = getExista(friendRequest);
+        List <FriendRequest> friendRequests = StreamSupport.stream(getFriendRequests().spliterator(), false)
+                .filter(exista).toList();
+        if (!friendRequests.isEmpty())
+            throw new DuplicateException("Exista o cerere de prietenie deja acceptata!");
         add(new Prietenie(friendRequest.getFrom(), friendRequest.getTo()));
         friendRequest.setStatus("approved");
         repoFriendRequests.update(friendRequest);
         notifyObservers(new UtilizatorChangeEvent(ChangeEventType.UPDATE, null));
         return friendRequest;
+    }
+
+    private static Predicate<FriendRequest> getExista(FriendRequest friendRequest) {
+        Utilizator from = friendRequest.getFrom();
+        Utilizator to = friendRequest.getTo();
+        return friendRequest1 -> {
+            if(Objects.equals(friendRequest1.getFrom().getId(), from.getId()) && Objects.equals(friendRequest1.getTo().getId(), to.getId()) && Objects.equals(friendRequest1.getStatus(), "approved"))
+                return true;
+            return Objects.equals(friendRequest1.getTo().getId(), from.getId()) && Objects.equals(friendRequest1.getFrom().getId(), to.getId()) && Objects.equals(friendRequest1.getStatus(), "approved");
+        };
     }
 
     public FriendRequest rejectFriendRequest(FriendRequest friendRequest){

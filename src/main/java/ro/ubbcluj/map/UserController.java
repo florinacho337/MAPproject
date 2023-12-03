@@ -77,15 +77,24 @@ public class UserController implements Observer<UtilizatorChangeEvent> {
         tableColumnTo.setCellValueFactory(new PropertyValueFactory<>("to"));
         tableViewUsers.setItems(modelUsers);
         tableViewFriendRequest.setItems(modelFR);
+        textFieldSetUser.textProperty().addListener(o -> handleFilter());
+    }
+
+    private void handleFilter() {
+        Iterable<FriendRequest> friendRequests = friendshipsService.getFriendRequests();
+        List<FriendRequestDTO> friendRequestDTOList = StreamSupport.stream(friendRequests.spliterator(), false)
+                .map(FriendRequestDTO::new)
+                .filter(friendRequestDTO -> textFieldSetUser.getText().isEmpty() ||
+                        Objects.equals(friendRequestDTO.getFrom(), Long.parseLong(textFieldSetUser.getText())) ||
+                        Objects.equals(friendRequestDTO.getTo(), Long.parseLong(textFieldSetUser.getText())))
+                .toList();
+        modelFR.setAll(friendRequestDTOList);
     }
 
     private void initModel() {
         Iterable<Utilizator> users = usersService.getAll();
-        Iterable<FriendRequest> friendRequests = friendshipsService.getFriendRequests();
         List<Utilizator> usersList = StreamSupport.stream(users.spliterator(), false).toList();
-        List<FriendRequestDTO> friendRequestDTOList = StreamSupport.stream(friendRequests.spliterator(), false).map(FriendRequestDTO::new).toList();
         modelUsers.setAll(usersList);
-        modelFR.setAll(friendRequestDTOList);
     }
 
     @Override
@@ -137,19 +146,29 @@ public class UserController implements Observer<UtilizatorChangeEvent> {
     }
 
     public void handleSendFR(ActionEvent actionEvent) {
-        if(Objects.equals(textFieldSetUser.getText(), ""))
-            MessageAlert.showErrorMessage(null, "Nu ati selectat utilizatorul curent!");
-        Utilizator to = tableViewUsers.getSelectionModel().getSelectedItem();
-        Utilizator from = usersService.find(Long.valueOf(textFieldSetUser.getText()));
-        if(friendshipsService.sendFriendRequest(from, to) == null)
-            MessageAlert.showMessage(null, Alert.AlertType.INFORMATION, "Friend Request", "Cerere de prietenie trimisa cu succes!");
-        else
-            MessageAlert.showErrorMessage(null, "Cerere de prietenie existenta!");
+        try {
+
+            if (Objects.equals(textFieldSetUser.getText(), ""))
+                MessageAlert.showErrorMessage(null, "Nu ati selectat utilizatorul curent!");
+            Utilizator to = tableViewUsers.getSelectionModel().getSelectedItem();
+            Utilizator from = usersService.find(Long.valueOf(textFieldSetUser.getText()));
+            if (friendshipsService.sendFriendRequest(from, to) == null)
+                MessageAlert.showMessage(null, Alert.AlertType.INFORMATION, "Friend Request", "Cerere de prietenie trimisa cu succes!");
+            else
+                MessageAlert.showErrorMessage(null, "Cerere de prietenie existenta!");
+        } catch (DuplicateException e){
+            MessageAlert.showErrorMessage(null, e.getMessage());
+        }
     }
 
     public void handleAccept(ActionEvent actionEvent) {
         try {
-            FriendRequest friendRequest = tableViewFriendRequest.getSelectionModel().getSelectedItem().getFriendRequest();
+            FriendRequestDTO friendRequestDTO = tableViewFriendRequest.getSelectionModel().getSelectedItem();
+            if(friendRequestDTO == null) {
+                MessageAlert.showErrorMessage(null, "Nu ati selectat nici o cerere de prietenie!");
+                return;
+            }
+            FriendRequest friendRequest = friendRequestDTO.getFriendRequest();
             if (Objects.equals(friendRequest.getStatus(), "approved") || Objects.equals(friendRequest.getStatus(), "rejected"))
                 MessageAlert.showErrorMessage(null, "Cererea de prietenie a fost deja acceptata sau refuzata!");
             else {
@@ -165,7 +184,12 @@ public class UserController implements Observer<UtilizatorChangeEvent> {
     }
 
     public void handleReject(ActionEvent actionEvent) {
-        FriendRequest friendRequest = tableViewFriendRequest.getSelectionModel().getSelectedItem().getFriendRequest();
+        FriendRequestDTO friendRequestDTO = tableViewFriendRequest.getSelectionModel().getSelectedItem();
+        if(friendRequestDTO == null){
+            MessageAlert.showErrorMessage(null, "Nu ati selectat nici o cerere de prietenie!");
+            return;
+        }
+        FriendRequest friendRequest = friendRequestDTO.getFriendRequest();
         if(Objects.equals(friendRequest.getStatus(), "approved") || Objects.equals(friendRequest.getStatus(), "rejected"))
             MessageAlert.showErrorMessage(null, "Cererea de prietenie a fost deja acceptata sau refuzata!");
         else {

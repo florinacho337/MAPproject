@@ -6,9 +6,9 @@ import ro.ubbcluj.map.domain.entities.Utilizator;
 import ro.ubbcluj.map.domain.validators.PrietenieValidator;
 import ro.ubbcluj.map.domain.validators.Validator;
 import ro.ubbcluj.map.repository.Repository;
+import ro.ubbcluj.map.utils.Constants;
 
 import java.sql.*;
-import java.time.format.DateTimeFormatter;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -103,8 +103,7 @@ public class FriendshipDBRepository implements Repository<Tuple<Long, Long>, Pri
         ){
             statement.setInt(1, Math.toIntExact(entity.getId().getLeft()));
             statement.setInt(2, Math.toIntExact(entity.getId().getRight()));
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
-            statement.setString(3, entity.getDate().format(formatter));
+            statement.setString(3, entity.getDate().format(Constants.DATE_TIME_FORMATTER));
             int response = statement.executeUpdate();
             if(response != 0)
                 return Optional.empty();

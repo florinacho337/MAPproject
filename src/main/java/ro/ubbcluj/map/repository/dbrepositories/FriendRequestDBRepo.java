@@ -5,6 +5,7 @@ import ro.ubbcluj.map.domain.entities.Utilizator;
 import ro.ubbcluj.map.domain.validators.FriendRequestValidator;
 import ro.ubbcluj.map.repository.Repository;
 
+import javax.security.auth.login.AccountLockedException;
 import java.sql.*;
 import java.util.HashSet;
 import java.util.Optional;
@@ -149,7 +150,19 @@ public class FriendRequestDBRepo implements Repository<Long, FriendRequest> {
 
     @Override
     public Optional<FriendRequest> delete(Long aLong) {
-        return Optional.empty();
+        try(Connection connection = DriverManager.getConnection(url, username, password);
+            PreparedStatement statement = connection.prepareStatement("delete from friend_requests where id = ?")
+        ){
+            statement.setInt(1, Math.toIntExact(aLong));
+            Optional<FriendRequest> friendRequest = findOne(aLong);
+            int response = statement.executeUpdate();
+            if(response != 0)
+                return friendRequest;
+            else
+                return Optional.empty();
+        }catch(SQLException e){
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
