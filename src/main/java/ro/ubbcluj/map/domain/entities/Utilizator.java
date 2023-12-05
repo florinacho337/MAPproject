@@ -16,6 +16,12 @@ public class Utilizator extends Entity<Long> {
         friends = new ArrayList<>();
     }
 
+    public Utilizator() {
+        this.firstName = "";
+        this.lastName = "";
+        friends = new ArrayList<>();
+    }
+
     public String getFirstName() {
         return firstName;
     }

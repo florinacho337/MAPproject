@@ -6,16 +6,11 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import ro.ubbcluj.map.controller.EditUserController;
-import ro.ubbcluj.map.controller.FriendshipsController;
-import ro.ubbcluj.map.controller.MessageAlert;
+import ro.ubbcluj.map.controller.*;
 import ro.ubbcluj.map.domain.entities.FriendRequest;
 import ro.ubbcluj.map.domain.entities.Utilizator;
 import ro.ubbcluj.map.domain.entities.dtos.FriendRequestDTO;
@@ -76,6 +71,7 @@ public class UserController implements Observer<UtilizatorChangeEvent> {
         tableColumnFrom.setCellValueFactory(new PropertyValueFactory<>("from"));
         tableColumnTo.setCellValueFactory(new PropertyValueFactory<>("to"));
         tableViewUsers.setItems(modelUsers);
+        tableViewUsers.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         tableViewFriendRequest.setItems(modelFR);
         textFieldSetUser.textProperty().addListener(o -> handleFilter());
     }
@@ -84,9 +80,9 @@ public class UserController implements Observer<UtilizatorChangeEvent> {
         Iterable<FriendRequest> friendRequests = friendshipsService.getFriendRequests();
         List<FriendRequestDTO> friendRequestDTOList = StreamSupport.stream(friendRequests.spliterator(), false)
                 .map(FriendRequestDTO::new)
-                .filter(friendRequestDTO -> textFieldSetUser.getText().isEmpty() ||
-                        Objects.equals(friendRequestDTO.getFrom(), Long.parseLong(textFieldSetUser.getText())) ||
-                        Objects.equals(friendRequestDTO.getTo(), Long.parseLong(textFieldSetUser.getText())))
+                .filter(friendRequestDTO -> !textFieldSetUser.getText().isEmpty() &&
+                        (Objects.equals(friendRequestDTO.getFrom(), Long.parseLong(textFieldSetUser.getText())) ||
+                        Objects.equals(friendRequestDTO.getTo(), Long.parseLong(textFieldSetUser.getText()))))
                 .toList();
         modelFR.setAll(friendRequestDTOList);
     }
@@ -95,6 +91,7 @@ public class UserController implements Observer<UtilizatorChangeEvent> {
         Iterable<Utilizator> users = usersService.getAll();
         List<Utilizator> usersList = StreamSupport.stream(users.spliterator(), false).toList();
         modelUsers.setAll(usersList);
+        handleFilter();
     }
 
     @Override
@@ -209,7 +206,7 @@ public class UserController implements Observer<UtilizatorChangeEvent> {
     }
 
     public void handleShowFriends(ActionEvent actionEvent) {
-        if(Objects.equals(textFieldSetUser.getText(), ""))
+        if(textFieldSetUser.getText().isEmpty())
             MessageAlert.showErrorMessage(null, "Nu exista un utilizator curent!");
         else {
             Long id = Long.valueOf(textFieldSetUser.getText());
@@ -229,6 +226,65 @@ public class UserController implements Observer<UtilizatorChangeEvent> {
 
             FriendshipsController controller = loader.getController();
             controller.setService(friendshipsService, dialogStage, user);
+
+            dialogStage.show();
+        } catch (IOException e){
+            e.printStackTrace();
+        }
+    }
+
+    public void handleSendMessage(ActionEvent actionEvent) {
+        if(textFieldSetUser.getText().isEmpty()) {
+            MessageAlert.showErrorMessage(null, "Nu exista un utilizator curent!");
+            return;
+        }
+        Utilizator from = usersService.find(Long.valueOf(textFieldSetUser.getText()));
+        List<Utilizator> to = tableViewUsers.getSelectionModel().getSelectedItems();
+        showSendDialog(from, to);
+    }
+
+    private void showSendDialog(Utilizator from, List<Utilizator> to) {
+        try {
+            FXMLLoader loader = new FXMLLoader(UserController.class.getResource("message-view.fxml"));
+
+            Stage dialogStage = new Stage();
+            dialogStage.setTitle("Trimite mesaj");
+            dialogStage.initModality(Modality.WINDOW_MODAL);
+            dialogStage.setScene(new Scene(loader.load()));
+
+            MessageController controller = loader.getController();
+            controller.setService(usersService, dialogStage, from, to);
+
+            dialogStage.show();
+        } catch (IOException e){
+            e.printStackTrace();
+        }
+    }
+
+    public void handleOpenChat(ActionEvent actionEvent) {
+        if(textFieldSetUser.getText().isEmpty()) {
+            MessageAlert.showErrorMessage(null, "Nu exista un utilizator curent!");
+            return;
+        }
+        Utilizator u1 = usersService.find(Long.valueOf(textFieldSetUser.getText()));
+        Utilizator u2 = tableViewUsers.getSelectionModel().getSelectedItem();
+        if(u2 != null)
+            showChatDialog(u1, u2);
+        else
+            MessageAlert.showErrorMessage(null, "Nu ati selectat nici un utilizator!");
+    }
+
+    private void showChatDialog(Utilizator u1, Utilizator u2) {
+        try {
+            FXMLLoader loader = new FXMLLoader(UserController.class.getResource("chat-view.fxml"));
+
+            Stage dialogStage = new Stage();
+            dialogStage.setTitle("Chat with " + u2.getFirstName() + " " + u2.getLastName());
+            dialogStage.initModality(Modality.WINDOW_MODAL);
+            dialogStage.setScene(new Scene(loader.load()));
+
+            ChatController controller = loader.getController();
+            controller.setService(usersService, dialogStage, u1, u2);
 
             dialogStage.show();
         } catch (IOException e){

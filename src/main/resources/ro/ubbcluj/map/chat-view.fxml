@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane prefHeight="387.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ro.ubbcluj.map.controller.ChatController">
+   <children>
+      <ListView fx:id="listView" layoutX="26.0" layoutY="25.0" onContextMenuRequested="#onContextMenuReq" prefHeight="221.0" prefWidth="551.0" AnchorPane.bottomAnchor="141.0" AnchorPane.leftAnchor="26.0" AnchorPane.rightAnchor="23.0" AnchorPane.topAnchor="25.0" />
+      <Label fx:id="labelReply" layoutX="26.0" layoutY="254.0" AnchorPane.bottomAnchor="117.0" AnchorPane.leftAnchor="26.0" />
+      <TextField fx:id="textFieldMessage" layoutX="26.0" layoutY="281.0" onKeyPressed="#setOnKeyPressed" prefHeight="35.0" prefWidth="458.0" AnchorPane.bottomAnchor="71.0" AnchorPane.leftAnchor="26.0" AnchorPane.rightAnchor="116.0" />
+      <Button layoutX="494.0" layoutY="262.0" mnemonicParsing="false" onAction="#handleSend" prefHeight="54.0" prefWidth="76.0" text="Send" AnchorPane.bottomAnchor="71.0" AnchorPane.rightAnchor="30.0" />
+      <HBox alignment="CENTER" layoutX="250.0" layoutY="338.0" AnchorPane.bottomAnchor="14.0" AnchorPane.leftAnchor="250.0" AnchorPane.rightAnchor="249.0">
+         <children>
+            <Button alignment="CENTER" contentDisplay="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#handleExit" prefHeight="35.0" prefWidth="101.0" text="Exit" />
+         </children>
+      </HBox>
+   </children>
+</AnchorPane>

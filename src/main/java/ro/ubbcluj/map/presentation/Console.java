@@ -5,6 +5,7 @@ import ro.ubbcluj.map.domain.validators.*;
 import ro.ubbcluj.map.repository.InMemoryRepository;
 import ro.ubbcluj.map.repository.dbrepositories.FriendRequestDBRepo;
 import ro.ubbcluj.map.repository.dbrepositories.FriendshipDBRepository;
+import ro.ubbcluj.map.repository.dbrepositories.MessageDBRepository;
 import ro.ubbcluj.map.repository.dbrepositories.UserDBRepository;
 import ro.ubbcluj.map.service.FriendshipsService;
 import ro.ubbcluj.map.service.UsersService;
@@ -37,7 +38,8 @@ public class Console {
         UserDBRepository repoUsers = new UserDBRepository(url, username, password);
         FriendshipDBRepository repoFriendships = new FriendshipDBRepository(url, username, password);
         FriendRequestDBRepo repoFriendRequest = new FriendRequestDBRepo(url, username, password);
-        usersService = new UsersService(repoUsers);
+        MessageDBRepository repoMessages = new MessageDBRepository(url, username, password);
+        usersService = new UsersService(repoUsers, repoMessages);
         friendshipsService = new FriendshipsService(repoFriendships, repoUsers, repoFriendRequest);
     }
 

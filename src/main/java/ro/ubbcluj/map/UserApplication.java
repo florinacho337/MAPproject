@@ -6,6 +6,7 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 import ro.ubbcluj.map.repository.dbrepositories.FriendRequestDBRepo;
 import ro.ubbcluj.map.repository.dbrepositories.FriendshipDBRepository;
+import ro.ubbcluj.map.repository.dbrepositories.MessageDBRepository;
 import ro.ubbcluj.map.repository.dbrepositories.UserDBRepository;
 import ro.ubbcluj.map.service.FriendshipsService;
 import ro.ubbcluj.map.service.UsersService;
@@ -24,7 +25,8 @@ public class UserApplication extends Application {
         FriendRequestDBRepo friendRequestDBRepo = new FriendRequestDBRepo(url, username, password);
         FriendshipDBRepository friendshipDBRepository = new FriendshipDBRepository(url, username, password);
         friendshipsService = new FriendshipsService(friendshipDBRepository, repoUsers, friendRequestDBRepo);
-        usersService = new UsersService(repoUsers);
+        MessageDBRepository repoMessages = new MessageDBRepository(url,username, password);
+        usersService = new UsersService(repoUsers, repoMessages);
 
         initView(primaryStage);
         primaryStage.show();

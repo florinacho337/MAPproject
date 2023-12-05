@@ -12,13 +12,15 @@ import ro.ubbcluj.map.domain.entities.Prietenie;
 import ro.ubbcluj.map.domain.entities.Utilizator;
 import ro.ubbcluj.map.domain.entities.dtos.PrietenDTO;
 import ro.ubbcluj.map.service.FriendshipsService;
+import ro.ubbcluj.map.utils.events.UtilizatorChangeEvent;
+import ro.ubbcluj.map.utils.observer.Observer;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.StreamSupport;
 
-public class FriendshipsController {
+public class FriendshipsController implements Observer<UtilizatorChangeEvent> {
     @FXML
     private TableColumn<PrietenDTO, String> tableColumnFirstName;
     @FXML
@@ -32,6 +34,7 @@ public class FriendshipsController {
     Stage dialogStage;
 
     private FriendshipsService friendshipsService;
+    Utilizator u;
     ObservableList<PrietenDTO> model = FXCollections.observableArrayList();
 
     @FXML
@@ -45,17 +48,24 @@ public class FriendshipsController {
     public void setService(FriendshipsService friendshipsService, Stage dialogStage, Utilizator u){
         this.friendshipsService = friendshipsService;
         this.dialogStage = dialogStage;
-        initModel(u);
+        this.u = u;
+        friendshipsService.addObserver(this);
+        initModel();
     }
 
-    private void initModel(Utilizator user){
+    private void initModel(){
         Iterable<Prietenie> friendships = friendshipsService.getAll();
         List<PrietenDTO> prieteniiUser = StreamSupport.stream(friendships.spliterator(), false)
-                .filter(prietenie -> Objects.equals(prietenie.getU1().getId(), user.getId()) || Objects.equals(prietenie.getU2().getId(), user.getId()))
-                .map(prietenie -> new PrietenDTO(prietenie, user)).toList();
+                .filter(prietenie -> Objects.equals(prietenie.getU1().getId(), u.getId()) || Objects.equals(prietenie.getU2().getId(), u.getId()))
+                .map(prietenie -> new PrietenDTO(prietenie, u)).toList();
         model.setAll(prieteniiUser);
     }
     public void handleExit(ActionEvent actionEvent) {
         dialogStage.close();
+    }
+
+    @Override
+    public void update(UtilizatorChangeEvent utilizatorChangeEvent) {
+        initModel();
     }
 }
