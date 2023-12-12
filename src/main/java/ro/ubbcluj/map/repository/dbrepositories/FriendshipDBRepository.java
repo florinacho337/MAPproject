@@ -13,7 +13,7 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
-public class FriendshipDBRepository implements Repository<Tuple<Long, Long>, Prietenie> {
+public class FriendshipDBRepository implements Repository<Tuple<String, String>, Prietenie> {
 
     private final String url;
     private final String username;
@@ -28,23 +28,26 @@ public class FriendshipDBRepository implements Repository<Tuple<Long, Long>, Pri
     }
 
     @Override
-    public Optional<Prietenie> findOne(Tuple<Long, Long> ID) {
+    public Optional<Prietenie> findOne(Tuple<String, String> ID) {
         try(Connection connection = DriverManager.getConnection(url, username, password);
-            PreparedStatement statement = connection.prepareStatement("select \"friendsFrom\", u1.first_name as \"firstNameU1\", u1.last_name as \"lastNameU1\"," +
-                    "u2.first_name as \"firstNameU2\", u2.last_name as \"lastNameU2\" FROM friendships f INNER JOIN users u1 on u1.id = f.id_u1 " +
-                    "INNER JOIN users u2 on u2.id = f.id_u2 where f.id_u1 = ? and f.id_u2 = ?")
+            PreparedStatement statement = connection.prepareStatement("""
+                    select "friendsFrom", u1.first_name as "firstNameU1", u1.last_name as "lastNameU1", u1.password as "passwordU1", u2.first_name as "firstNameU2", u2.last_name as "lastNameU2", u2.password as "passwordU2"\s
+                    FROM friendships f INNER JOIN users u1 on u1.username = f.username1\s
+                    INNER JOIN users u2 on u2.username = f.username2 where f.username1 = ? and f.username2 = ?""")
         ){
-            statement.setInt(1, Math.toIntExact(ID.getLeft()));
-            statement.setInt(2, Math.toIntExact(ID.getRight()));
+            statement.setString(1, ID.getLeft());
+            statement.setString(2, ID.getRight());
             ResultSet resultSet = statement.executeQuery();
             if(resultSet.next()){
                 String firstNameU1 = resultSet.getString("firstNameU1");
                 String lastNameU1 = resultSet.getString("lastNameU1");
+                String passwordU1 = resultSet.getString("passwordU1");
                 String firstNameU2 = resultSet.getString("firstNameU2");
                 String lastNameU2 = resultSet.getString("lastNameU2");
+                String passwordU2 = resultSet.getString("passwordU2");
                 String friendsFrom = resultSet.getString("friendsFrom");
-                Utilizator u1 = new Utilizator(firstNameU1, lastNameU1);
-                Utilizator u2 = new Utilizator(firstNameU2, lastNameU2);
+                Utilizator u1 = new Utilizator(firstNameU1, lastNameU1, ID.getLeft(), passwordU1);
+                Utilizator u2 = new Utilizator(firstNameU2, lastNameU2, ID.getRight(), passwordU2);
                 u1.setId(ID.getLeft());
                 u2.setId(ID.getRight());
                 Prietenie prietenie = new Prietenie(u1, u2, friendsFrom);
@@ -63,27 +66,29 @@ public class FriendshipDBRepository implements Repository<Tuple<Long, Long>, Pri
 
         try (Connection connection = DriverManager.getConnection(url, username, password);
              PreparedStatement statement = connection.prepareStatement("""
-                     select id_u1, id_u2, "friendsFrom", u1.first_name as "firstNameU1", u1.last_name as "lastNameU1", u2.first_name as "firstNameU2", u2.last_name as "lastNameU2" from friendships f
-                     inner join users u1 on u1.id = f.id_u1
-                     inner join users u2 on u2.id = f.id_u2""");
+                     select username1, username2, "friendsFrom", u1.first_name as "firstNameU1", u1.last_name as "lastNameU1", u1.password as "passwordU1", u2.first_name as "firstNameU2", u2.last_name as "lastNameU2", u2.password as "passwordU2" from friendships f
+                     inner join users u1 on u1.username = f.username1
+                     inner join users u2 on u2.username = f.username2""");
              ResultSet resultSet = statement.executeQuery()
         ) {
 
             while (resultSet.next())
             {
-                Long idU1 = resultSet.getLong("id_u1");
-                Long idU2 = resultSet.getLong("id_u2");
+                String idU1 = resultSet.getString("username1");
+                String idU2 = resultSet.getString("username2");
                 String friendsFrom = resultSet.getString("friendsFrom");
                 String fristNameU1 = resultSet.getString("firstNameU1");
                 String fristNameU2 = resultSet.getString("firstNameU2");
                 String lastNameU1 = resultSet.getString("lastNameU1");
                 String lastNameU2 = resultSet.getString("lastNameU2");
-                Utilizator u1 = new Utilizator(fristNameU1, lastNameU1);
-                Utilizator u2 = new Utilizator(fristNameU2, lastNameU2);
+                String passwordU1 = resultSet.getString("passwordU1");
+                String passwordU2 = resultSet.getString("passwordU2");
+                Utilizator u1 = new Utilizator(fristNameU1, lastNameU1, idU1, passwordU1);
+                Utilizator u2 = new Utilizator(fristNameU2, lastNameU2, idU2, passwordU2);
                 u1.setId(idU1);
                 u2.setId(idU2);
                 Prietenie prietenie = new Prietenie(u1, u2, friendsFrom);
-                Tuple<Long, Long> id = new Tuple<>(idU1, idU2);
+                Tuple<String, String> id = new Tuple<>(idU1, idU2);
                 prietenie.setId(id);
                 prietenii.add(prietenie);
             }
@@ -101,8 +106,8 @@ public class FriendshipDBRepository implements Repository<Tuple<Long, Long>, Pri
             PreparedStatement statement = connection.prepareStatement("insert into friendships " +
                     "values (?, ?, ?)")
         ){
-            statement.setInt(1, Math.toIntExact(entity.getId().getLeft()));
-            statement.setInt(2, Math.toIntExact(entity.getId().getRight()));
+            statement.setString(1, entity.getId().getLeft());
+            statement.setString(2, entity.getId().getRight());
             statement.setString(3, entity.getDate().format(Constants.DATE_TIME_FORMATTER));
             int response = statement.executeUpdate();
             if(response != 0)
@@ -115,12 +120,12 @@ public class FriendshipDBRepository implements Repository<Tuple<Long, Long>, Pri
     }
 
     @Override
-    public Optional<Prietenie> delete(Tuple<Long, Long> ID) {
+    public Optional<Prietenie> delete(Tuple<String, String> ID) {
         try(Connection connection = DriverManager.getConnection(url, username, password);
-            PreparedStatement statement = connection.prepareStatement("delete from friendships where id_u1 = ? and id_u2 = ?")
+            PreparedStatement statement = connection.prepareStatement("delete from friendships where username1 = ? and username2 = ?")
         ){
-            statement.setInt(1, Math.toIntExact(ID.getLeft()));
-            statement.setInt(2, Math.toIntExact(ID.getRight()));
+            statement.setString(1, ID.getLeft());
+            statement.setString(2, ID.getRight());
             Optional<Prietenie> prietenie = findOne(ID);
             int response = statement.executeUpdate();
             if(response != 0)

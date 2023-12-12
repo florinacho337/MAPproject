@@ -1,4 +1,4 @@
-package ro.ubbcluj.map;
+package ro.ubbcluj.map.controller;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -10,7 +10,7 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import ro.ubbcluj.map.controller.*;
+import ro.ubbcluj.map.UserApplication;
 import ro.ubbcluj.map.domain.entities.FriendRequest;
 import ro.ubbcluj.map.domain.entities.Utilizator;
 import ro.ubbcluj.map.domain.entities.dtos.FriendRequestDTO;
@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.StreamSupport;
 
-public class UserController implements Observer<UtilizatorChangeEvent> {
+public class AdminController implements Observer<UtilizatorChangeEvent> {
 
     UsersService usersService;
     FriendshipsService friendshipsService;
@@ -38,7 +38,7 @@ public class UserController implements Observer<UtilizatorChangeEvent> {
     @FXML
     private TableColumn<Utilizator, String> tableColumnLastName;
     @FXML
-    private TableColumn<Utilizator, Long> tableColumnId;
+    private TableColumn<Utilizator, String> tableColumnId;
     @FXML
     private TableColumn<FriendRequestDTO, String> tableColumnStatus;
     @FXML
@@ -64,7 +64,7 @@ public class UserController implements Observer<UtilizatorChangeEvent> {
 
     @FXML
     public void initialize() {
-        tableColumnId.setCellValueFactory(new PropertyValueFactory<>("id"));
+        tableColumnId.setCellValueFactory(new PropertyValueFactory<>("username"));
         tableColumnFirstName.setCellValueFactory(new PropertyValueFactory<>("firstName"));
         tableColumnLastName.setCellValueFactory(new PropertyValueFactory<>("lastName"));
         tableColumnStatus.setCellValueFactory(new PropertyValueFactory<>("status"));
@@ -73,25 +73,20 @@ public class UserController implements Observer<UtilizatorChangeEvent> {
         tableViewUsers.setItems(modelUsers);
         tableViewUsers.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         tableViewFriendRequest.setItems(modelFR);
-        textFieldSetUser.textProperty().addListener(o -> handleFilter());
+        textFieldSetUser.textProperty().addListener(o -> initModel());
     }
-
-    private void handleFilter() {
+    private void initModel() {
+        List<Utilizator> usersList = StreamSupport.stream(usersService.getAll().spliterator(), false).filter(utilizator -> textFieldSetUser.getText().isEmpty() ||
+                !(Objects.equals(utilizator.getId(), textFieldSetUser.getText()))).toList();
+        modelUsers.setAll(usersList);
         Iterable<FriendRequest> friendRequests = friendshipsService.getFriendRequests();
         List<FriendRequestDTO> friendRequestDTOList = StreamSupport.stream(friendRequests.spliterator(), false)
                 .map(FriendRequestDTO::new)
                 .filter(friendRequestDTO -> !textFieldSetUser.getText().isEmpty() &&
-                        (Objects.equals(friendRequestDTO.getFrom(), Long.parseLong(textFieldSetUser.getText())) ||
-                        Objects.equals(friendRequestDTO.getTo(), Long.parseLong(textFieldSetUser.getText()))))
+                        (Objects.equals(friendRequestDTO.getFrom(), textFieldSetUser.getText()) ||
+                                Objects.equals(friendRequestDTO.getTo(), textFieldSetUser.getText())))
                 .toList();
         modelFR.setAll(friendRequestDTOList);
-    }
-
-    private void initModel() {
-        Iterable<Utilizator> users = usersService.getAll();
-        List<Utilizator> usersList = StreamSupport.stream(users.spliterator(), false).toList();
-        modelUsers.setAll(usersList);
-        handleFilter();
     }
 
     @Override
@@ -113,7 +108,7 @@ public class UserController implements Observer<UtilizatorChangeEvent> {
 
     private void showEditUserDialog(Utilizator user) {
         try {
-            FXMLLoader loader = new FXMLLoader(UserController.class.getResource("edituser-view.fxml"));
+            FXMLLoader loader = new FXMLLoader(UserApplication.class.getResource("edituser-view.fxml"));
 
             Stage dialogStage = new Stage();
             dialogStage.setTitle("Edit User");
@@ -148,7 +143,7 @@ public class UserController implements Observer<UtilizatorChangeEvent> {
             if (Objects.equals(textFieldSetUser.getText(), ""))
                 MessageAlert.showErrorMessage(null, "Nu ati selectat utilizatorul curent!");
             Utilizator to = tableViewUsers.getSelectionModel().getSelectedItem();
-            Utilizator from = usersService.find(Long.valueOf(textFieldSetUser.getText()));
+            Utilizator from = usersService.find(textFieldSetUser.getText());
             if (friendshipsService.sendFriendRequest(from, to) == null)
                 MessageAlert.showMessage(null, Alert.AlertType.INFORMATION, "Friend Request", "Cerere de prietenie trimisa cu succes!");
             else
@@ -201,7 +196,7 @@ public class UserController implements Observer<UtilizatorChangeEvent> {
     public void handleSetUser(ActionEvent actionEvent) {
         Utilizator utilizator = tableViewUsers.getSelectionModel().getSelectedItem();
         if (utilizator != null) {
-            textFieldSetUser.setText(String.valueOf(utilizator.getId()));
+            textFieldSetUser.setText(utilizator.getId());
         } else MessageAlert.showErrorMessage(null, "Nu ati selectat nici un utilizator!");
     }
 
@@ -209,15 +204,14 @@ public class UserController implements Observer<UtilizatorChangeEvent> {
         if(textFieldSetUser.getText().isEmpty())
             MessageAlert.showErrorMessage(null, "Nu exista un utilizator curent!");
         else {
-            Long id = Long.valueOf(textFieldSetUser.getText());
-            Utilizator user = usersService.find(id);
+            Utilizator user = usersService.find(textFieldSetUser.getText());
             showFriendshipDialog(user);
         }
     }
 
     private void showFriendshipDialog(Utilizator user) {
         try {
-            FXMLLoader loader = new FXMLLoader(UserController.class.getResource("friendship-view.fxml"));
+            FXMLLoader loader = new FXMLLoader(UserApplication.class.getResource("friendship-view.fxml"));
 
             Stage dialogStage = new Stage();
             dialogStage.setTitle("Prietenii");
@@ -238,14 +232,14 @@ public class UserController implements Observer<UtilizatorChangeEvent> {
             MessageAlert.showErrorMessage(null, "Nu exista un utilizator curent!");
             return;
         }
-        Utilizator from = usersService.find(Long.valueOf(textFieldSetUser.getText()));
+        Utilizator from = usersService.find(textFieldSetUser.getText());
         List<Utilizator> to = tableViewUsers.getSelectionModel().getSelectedItems();
         showSendDialog(from, to);
     }
 
     private void showSendDialog(Utilizator from, List<Utilizator> to) {
         try {
-            FXMLLoader loader = new FXMLLoader(UserController.class.getResource("message-view.fxml"));
+            FXMLLoader loader = new FXMLLoader(UserApplication.class.getResource("message-view.fxml"));
 
             Stage dialogStage = new Stage();
             dialogStage.setTitle("Trimite mesaj");
@@ -266,7 +260,7 @@ public class UserController implements Observer<UtilizatorChangeEvent> {
             MessageAlert.showErrorMessage(null, "Nu exista un utilizator curent!");
             return;
         }
-        Utilizator u1 = usersService.find(Long.valueOf(textFieldSetUser.getText()));
+        Utilizator u1 = usersService.find(textFieldSetUser.getText());
         Utilizator u2 = tableViewUsers.getSelectionModel().getSelectedItem();
         if(u2 != null)
             showChatDialog(u1, u2);
@@ -276,7 +270,7 @@ public class UserController implements Observer<UtilizatorChangeEvent> {
 
     private void showChatDialog(Utilizator u1, Utilizator u2) {
         try {
-            FXMLLoader loader = new FXMLLoader(UserController.class.getResource("chat-view.fxml"));
+            FXMLLoader loader = new FXMLLoader(UserApplication.class.getResource("chat-view.fxml"));
 
             Stage dialogStage = new Stage();
             dialogStage.setTitle("Chat with " + u2.getFirstName() + " " + u2.getLastName());

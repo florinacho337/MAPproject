@@ -1,8 +1,9 @@
 package ro.ubbcluj.map.presentation;
 
-import ro.ubbcluj.map.domain.entities.*;
-import ro.ubbcluj.map.domain.validators.*;
-import ro.ubbcluj.map.repository.InMemoryRepository;
+import ro.ubbcluj.map.domain.entities.FriendRequest;
+import ro.ubbcluj.map.domain.entities.Prietenie;
+import ro.ubbcluj.map.domain.entities.Tuple;
+import ro.ubbcluj.map.domain.entities.Utilizator;
 import ro.ubbcluj.map.repository.dbrepositories.FriendRequestDBRepo;
 import ro.ubbcluj.map.repository.dbrepositories.FriendshipDBRepository;
 import ro.ubbcluj.map.repository.dbrepositories.MessageDBRepository;
@@ -199,8 +200,8 @@ public class Console {
             System.out.println("Numar de parametrii invalid!");
             return;
         }
-        Utilizator from = usersService.find(Long.valueOf(parts[1]));
-        Utilizator to = usersService.find(Long.valueOf(parts[2]));
+        Utilizator from = usersService.find(parts[1]);
+        Utilizator to = usersService.find(parts[2]);
         if(friendshipsService.sendFriendRequest(from, to) == null)
             System.out.println("Cerere de prietenie trimisa cu succes!");
         else
@@ -208,12 +209,12 @@ public class Console {
     }
 
     private void updateUser(String[] parts) {
-        if(parts.length != 4) {
+        if(parts.length != 5) {
             System.out.println("Numar de parametrii invalid!");
             return;
         }
-        Utilizator utilizator = new Utilizator(parts[2], parts[3]);
-        utilizator.setId(Long.valueOf(parts[1]));
+        Utilizator utilizator = new Utilizator(parts[2], parts[3], parts[1], parts[4]);
+        utilizator.setId(parts[1]);
         if(usersService.update(utilizator) == null)
             System.out.println("Utilizator actualizat cu succes!");
         else
@@ -225,9 +226,9 @@ public class Console {
             System.out.println("Numar de parametrii invalid!");
             return;
         }
-        List<Tuple<Utilizator, String>> prietenii = friendshipsService.prieteniiDinLuna(Long.parseLong(parts[1]),
+        List<Tuple<Utilizator, String>> prietenii = friendshipsService.prieteniiDinLuna(parts[1],
                 Integer.parseInt(parts[2]));
-        Utilizator utilizator = usersService.find(Long.parseLong(parts[1]));
+        Utilizator utilizator = usersService.find(parts[1]);
         if(prietenii.isEmpty())
             System.out.format("Nu exista prietenii ale utilizatorului " + utilizator + " in luna %s.\n", parts[2]);
         prietenii.forEach(Console::afiseazaPrieteniiLuna);
@@ -256,7 +257,7 @@ public class Console {
             System.out.println("Nu exista utilizatori!");
             return;
         }
-        users.forEach(user -> System.out.format("%d. %s\n", user.getId(), user));
+        users.forEach(user -> System.out.format("%s. %s\n", user.getId(), user));
     }
 
     private void comunitateSociabila(String[] parts) {
@@ -264,10 +265,10 @@ public class Console {
             System.out.println("Numar de parametrii invalid!");
             return;
         }
-        ArrayList<Integer> list = friendshipsService.biggestConnectedComponent();
+        ArrayList<String> list = friendshipsService.biggestConnectedComponent();
         list.forEach(l ->{
-            Utilizator user = usersService.find(Long.valueOf(l));
-            System.out.format("%d. %s\n", user.getId(), user);
+            Utilizator user = usersService.find(l);
+            System.out.format("%s. %s\n", user.getId(), user);
         });
     }
 
@@ -285,7 +286,7 @@ public class Console {
             return;
         }
 
-        Tuple<Long, Long> id = new Tuple<>(Long.valueOf(parts[1]), Long.valueOf(parts[2]));
+        Tuple<String, String> id = new Tuple<>(parts[1], parts[2]);
         Prietenie prietenie = friendshipsService.remove(id);
         if(prietenie != null)
             System.out.println(prietenie + " stearsa cu succes!");
@@ -294,12 +295,12 @@ public class Console {
     }
 
     private void addUser(String[] parts) {
-        if (parts.length != 3) {
+        if (parts.length != 5) {
             System.out.println("Numar de parametrii invalid!");
             return;
         }
 
-        Utilizator utilizator = new Utilizator(parts[1], parts[2]);
+        Utilizator utilizator = new Utilizator(parts[1], parts[2], parts[3], parts[4]);
         if(usersService.add(utilizator) == null)
             System.out.println(utilizator + " a fost adaugat cu succes!");
         else
@@ -312,8 +313,8 @@ public class Console {
             return;
         }
 
-        Utilizator u1 = usersService.find(Long.valueOf(parts[1]));
-        Utilizator u2 = usersService.find(Long.valueOf(parts[2]));
+        Utilizator u1 = usersService.find(parts[1]);
+        Utilizator u2 = usersService.find(parts[2]);
         Prietenie prietenie = new Prietenie(u1, u2);
         friendshipsService.add(prietenie);
         System.out.println(prietenie + " cu id-ul " + prietenie.getId() + " adaugata cu succes!");
@@ -325,7 +326,7 @@ public class Console {
             return;
         }
 
-        Utilizator user_sters = usersService.remove(Long.parseLong(parts[1]));
+        Utilizator user_sters = usersService.remove(parts[1]);
         if(user_sters != null)
             System.out.println(user_sters + " si prieteniile acestuia au fost sterse cu succes!");
         else

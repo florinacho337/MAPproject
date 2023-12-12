@@ -31,23 +31,23 @@ public class EditUserController {
         type = EditType.SAVE;
         textFieldId.setEditable(false);
         if(u != null){
-            setFields(u);
+            setFields();
             type = EditType.UPDATE;
         }
     }
 
-    private void setFields(Utilizator u) {
-        textFieldId.setText(String.valueOf(u.getId()));
-        textFieldFirstName.setText(u.getFirstName());
-        textFieldLastName.setText(u.getLastName());
+    private void setFields() {
+        textFieldId.setText(user.getId());
+        textFieldFirstName.setText(user.getFirstName());
+        textFieldLastName.setText(user.getLastName());
     }
 
     @FXML
     public void handleSave(){
-        Long id = Long.valueOf(textFieldId.getText());
+        String id = textFieldId.getText();
         String firstName = textFieldFirstName.getText();
         String lastName = textFieldLastName.getText();
-        Utilizator u = new Utilizator(firstName, lastName);
+        Utilizator u = new Utilizator(firstName, lastName, id, user.getPassword());
         u.setId(id);
         if(type == EditType.SAVE)
             saveUser(u);

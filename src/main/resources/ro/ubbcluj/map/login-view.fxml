@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.paint.*?>
+<?import javafx.scene.text.*?>
+
+<AnchorPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ro.ubbcluj.map.controller.LoginRegisterController">
+   <Text layoutX="165.0" layoutY="95.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Login" textAlignment="CENTER" wrappingWidth="245.29931640625" AnchorPane.bottomAnchor="283.0999984741211" AnchorPane.leftAnchor="165.0" AnchorPane.rightAnchor="189.70068359375" AnchorPane.topAnchor="20.540000915527344">
+      <font>
+         <Font name="JetBrains Mono ExtraBold Italic" size="73.0" />
+      </font>
+   </Text>
+   <HBox alignment="CENTER_LEFT" layoutX="77.0" layoutY="145.0" prefHeight="34.0" prefWidth="394.0" spacing="20.0" AnchorPane.bottomAnchor="221.0" AnchorPane.topAnchor="145.0">
+      <children>
+         <Label text="Username">
+            <font>
+               <Font size="27.0" />
+            </font>
+         </Label>
+         <TextField fx:id="usernameFieldLogin" prefHeight="24.0" prefWidth="233.0">
+            <cursor>
+               <Cursor fx:constant="TEXT" />
+            </cursor>
+         </TextField>
+      </children>
+   </HBox>
+   <HBox alignment="CENTER_LEFT" layoutX="77.0" layoutY="217.0" prefHeight="34.0" prefWidth="394.0" spacing="20.0" AnchorPane.bottomAnchor="149.0" AnchorPane.topAnchor="217.0">
+      <children>
+         <Label prefHeight="34.0" prefWidth="137.0" text="Password">
+            <font>
+               <Font size="27.0" />
+            </font>
+         </Label>
+         <PasswordField fx:id="passwordFieldLogin" prefHeight="24.0" prefWidth="233.0">
+            <cursor>
+               <Cursor fx:constant="TEXT" />
+            </cursor>
+         </PasswordField>
+      </children>
+   </HBox>
+   <Button layoutX="410.0" layoutY="296.0" mnemonicParsing="false" onAction="#handleLogin" prefHeight="47.0" prefWidth="103.0" text="Login" textAlignment="CENTER" AnchorPane.bottomAnchor="57.0" AnchorPane.rightAnchor="87.0">
+      <font>
+         <Font name="DejaVu Serif Bold" size="22.0" />
+      </font>
+      <textFill>
+         <LinearGradient endX="0.07619047619047613" endY="0.8380952380952381" startX="1.0">
+            <stops>
+               <Stop>
+                  <color>
+                     <Color red="0.5298529863357544" green="0.5789473652839661" blue="0.15813839435577393" />
+                  </color>
+               </Stop>
+               <Stop offset="1.0">
+                  <color>
+                     <Color red="0.23680000007152557" green="0.17679999768733978" blue="0.5199999809265137" />
+                  </color>
+               </Stop>
+            </stops>
+         </LinearGradient>
+      </textFill>
+   </Button>
+   <Label layoutX="77.0" layoutY="312.0" onMouseClicked="#changeToRegister" text="Create a new account" textFill="BLUE" underline="true" AnchorPane.bottomAnchor="67.0" AnchorPane.leftAnchor="77.0">
+      <cursor>
+         <Cursor fx:constant="HAND" />
+      </cursor>
+      <font>
+         <Font size="18.0" />
+      </font>
+   </Label>
+</AnchorPane>

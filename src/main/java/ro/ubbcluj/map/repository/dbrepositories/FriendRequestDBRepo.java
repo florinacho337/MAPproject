@@ -5,9 +5,9 @@ import ro.ubbcluj.map.domain.entities.Utilizator;
 import ro.ubbcluj.map.domain.validators.FriendRequestValidator;
 import ro.ubbcluj.map.repository.Repository;
 
-import javax.security.auth.login.AccountLockedException;
 import java.sql.*;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
@@ -27,24 +27,25 @@ public class FriendRequestDBRepo implements Repository<Long, FriendRequest> {
     private void setFriends(Utilizator utilizator){
         try(Connection connection = DriverManager.getConnection(url, username, password);
             PreparedStatement statement = connection.prepareStatement("select * from friendships "+
-                    "where id_u1 = ? or id_u2 = ?")
+                    "where username1 = ? or username2 = ?")
         ){
-            statement.setInt(1, Math.toIntExact(utilizator.getId()));
-            statement.setInt(2, Math.toIntExact(utilizator.getId()));
+            statement.setString(1, utilizator.getId());
+            statement.setString(2, utilizator.getId());
             ResultSet resultSet = statement.executeQuery();
             while (resultSet.next()){
                 PreparedStatement getFriend = connection.prepareStatement("select * from users "+
-                        "where id = ?");
-                if(resultSet.getInt("id_u1") == utilizator.getId())
-                    getFriend.setInt(1, resultSet.getInt("id_u2"));
+                        "where username = ?");
+                if(Objects.equals(resultSet.getString("username1"), utilizator.getId()))
+                    getFriend.setString(1, resultSet.getString("username2"));
                 else
-                    getFriend.setInt(1, resultSet.getInt("id_u1"));
+                    getFriend.setString(1, resultSet.getString("username1"));
                 ResultSet friend = getFriend.executeQuery();
                 if(friend.next()){
                     String firstName = friend.getString("first_name");
                     String lastName = friend.getString("last_name");
-                    Long id = (long) friend.getInt("id");
-                    Utilizator prieten = new Utilizator(firstName, lastName);
+                    String password = friend.getString("password");
+                    String id = friend.getString("username");
+                    Utilizator prieten = new Utilizator(firstName, lastName, id, password);
                     prieten.setId(id);
                     utilizator.addFriend(prieten);
                 }
@@ -57,9 +58,9 @@ public class FriendRequestDBRepo implements Repository<Long, FriendRequest> {
     public Optional<FriendRequest> findOne(Long aLong) {
         try(Connection connection = DriverManager.getConnection(url, username, password);
             PreparedStatement statement = connection.prepareStatement("""
-                     select "from", "to", status, u1.first_name as "firstNameFrom", u1.last_name as "lastNameFrom", u2.first_name as "firstNameTo", u2.last_name as "lastNameTo" from friend_requests fr
-                     inner join users u1 on u1.id = fr.from
-                     inner join users u2 on u2.id = fr.to
+                     select "from", "to", status, u1.first_name as "firstNameFrom", u1.last_name as "lastNameFrom", u1.password as "passwordU1", u2.first_name as "firstNameTo", u2.last_name as "lastNameTo", u2.password as "passwordU2" from friend_requests fr
+                     inner join users u1 on u1.username = fr.from
+                     inner join users u2 on u2.username = fr.to
                      where fr.id = ?
                      """)
 
@@ -69,12 +70,14 @@ public class FriendRequestDBRepo implements Repository<Long, FriendRequest> {
             if(resultSet.next()) {
                 String firstNameFrom = resultSet.getString("firstNameFrom");
                 String lastNameFrom = resultSet.getString("lastNameFrom");
+                String passwordFrom = resultSet.getString("passwordU1");
                 String fristNameTo = resultSet.getString("firstNameTo");
                 String lastNameTo = resultSet.getString("lastNameTo");
-                Long id_from = resultSet.getLong("from");
-                Long id_to = resultSet.getLong("to");
-                Utilizator from = new Utilizator(firstNameFrom,lastNameFrom);
-                Utilizator to = new Utilizator(fristNameTo, lastNameTo);
+                String passwordTo = resultSet.getString("passwordU2");
+                String id_from = resultSet.getString("from");
+                String id_to = resultSet.getString("to");
+                Utilizator from = new Utilizator(firstNameFrom,lastNameFrom, id_from, passwordFrom);
+                Utilizator to = new Utilizator(fristNameTo, lastNameTo, id_to, passwordTo);
                 from.setId(id_from);
                 to.setId(id_to);
                 setFriends(from);
@@ -95,25 +98,27 @@ public class FriendRequestDBRepo implements Repository<Long, FriendRequest> {
 
         try (Connection connection = DriverManager.getConnection(url, username, password);
              PreparedStatement statement = connection.prepareStatement("""
-                     select fr.id, "from", "to", status, u1.first_name as "firstNameFrom", u1.last_name as "lastNameFrom", u2.first_name as "firstNameTo", u2.last_name as "lastNameTo" from friend_requests fr
-                     inner join users u1 on u1.id = fr.from
-                     inner join users u2 on u2.id = fr.to
+                     select fr.id, "from", "to", status, u1.first_name as "firstNameFrom", u1.last_name as "lastNameFrom", u1.password as "passwordFrom", u2.first_name as "firstNameTo", u2.last_name as "lastNameTo", u2.password as "passwordTo" from friend_requests fr
+                     inner join users u1 on u1.username = fr.from
+                     inner join users u2 on u2.username = fr.to
                      """);
              ResultSet resultSet = statement.executeQuery()
         ) {
 
             while (resultSet.next())
             {
-                Long from = resultSet.getLong("from");
-                Long to = resultSet.getLong("to");
+                String from = resultSet.getString("from");
+                String to = resultSet.getString("to");
                 Long id = resultSet.getLong("id");
                 String status = resultSet.getString("status");
                 String fristNameU1 = resultSet.getString("firstNameFrom");
                 String fristNameU2 = resultSet.getString("firstNameTo");
+                String passwordFrom = resultSet.getString("passwordFrom");
                 String lastNameU1 = resultSet.getString("lastNameFrom");
                 String lastNameU2 = resultSet.getString("lastNameTo");
-                Utilizator u1 = new Utilizator(fristNameU1, lastNameU1);
-                Utilizator u2 = new Utilizator(fristNameU2, lastNameU2);
+                String passwordTo = resultSet.getString("passwordTo");
+                Utilizator u1 = new Utilizator(fristNameU1, lastNameU1, from, passwordFrom);
+                Utilizator u2 = new Utilizator(fristNameU2, lastNameU2, to, passwordTo);
                 u1.setId(from);
                 u2.setId(to);
                 setFriends(u1);
@@ -136,8 +141,8 @@ public class FriendRequestDBRepo implements Repository<Long, FriendRequest> {
             PreparedStatement statement = connection.prepareStatement("insert into friend_requests(\"from\", \"to\") " +
                     "values (?, ?)")
         ){
-            statement.setInt(1, Math.toIntExact(entity.getFrom().getId()));
-            statement.setInt(2, Math.toIntExact(entity.getTo().getId()));
+            statement.setString(1, entity.getFrom().getId());
+            statement.setString(2, entity.getTo().getId());
             int response = statement.executeUpdate();
             if(response != 0)
                 return Optional.empty();

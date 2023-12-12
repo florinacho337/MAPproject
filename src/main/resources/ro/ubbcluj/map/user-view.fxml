@@ -1,76 +1,96 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
 
-<AnchorPane prefHeight="400.0" prefWidth="671.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ro.ubbcluj.map.UserController">
-    <SplitPane dividerPositions="0.5412979351032449" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="310.0" prefWidth="630.0" AnchorPane.bottomAnchor="80.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0">
-        <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="306.0" prefWidth="325.0">
-            <TableView fx:id="tableViewUsers" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="310.0" prefWidth="345.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-                <columns>
-                    <TableColumn prefWidth="75.0" text="Users">
-                        <columns>
-                            <TableColumn fx:id="tableColumnId" prefWidth="75.0" text="Id" />
-                            <TableColumn fx:id="tableColumnFirstName" prefWidth="168.0" text="First Name" />
-                            <TableColumn fx:id="tableColumnLastName" prefWidth="102.0" text="Last Name" />
-                        </columns>
-                    </TableColumn>
-                </columns>
-                <columnResizePolicy>
-                    <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
-                </columnResizePolicy>
-            </TableView>
-        </AnchorPane>
-        <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="247.0" prefWidth="327.0">
-            <TableView fx:id="tableViewFriendRequest" layoutX="-3.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="308.0" prefWidth="314.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-                <columns>
-                    <TableColumn prefWidth="75.0" text="Friend Requests">
-                        <columns>
-                            <TableColumn fx:id="tableColumnFrom" prefWidth="70.0" text="From" />
-                            <TableColumn fx:id="tableColumnTo" prefWidth="23.0" text="To" />
-                            <TableColumn fx:id="tableColumnStatus" prefWidth="75.0" text="Status" />
-                        </columns>
-                    </TableColumn>
-                </columns>
-                <columnResizePolicy>
-                    <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
-                </columnResizePolicy>
-            </TableView>
-        </AnchorPane>
-    </SplitPane>
-    <HBox prefHeight="24.0" prefWidth="640.0" spacing="10.0" AnchorPane.bottomAnchor="50.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="0.0">
-        <GridPane alignment="CENTER_LEFT" prefHeight="24.0" prefWidth="314.0">
-            <columnConstraints>
-                <ColumnConstraints fillWidth="false" hgrow="SOMETIMES" maxWidth="277.0" minWidth="10.0" prefWidth="119.0" />
-                <ColumnConstraints hgrow="SOMETIMES" maxWidth="452.0" minWidth="0.0" prefWidth="39.0" />
-                <ColumnConstraints hgrow="SOMETIMES" maxWidth="452.0" minWidth="10.0" prefWidth="144.0" />
-            </columnConstraints>
-            <rowConstraints>
-                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-            </rowConstraints>
-            <opaqueInsets>
-                <Insets />
-            </opaqueInsets>
-            <Label prefHeight="16.0" prefWidth="134.0" text="Utilizator curent:" />
-            <TextField fx:id="textFieldSetUser" prefHeight="24.0" prefWidth="113.0" GridPane.columnIndex="1">
-                <GridPane.margin>
-                    <Insets right="10.0" />
-                </GridPane.margin>
-            </TextField>
-            <Button mnemonicParsing="false" onAction="#handleSetUser" prefHeight="24.0" prefWidth="139.0" text="Set Current User" GridPane.columnIndex="2" />
-        </GridPane>
-        <Button mnemonicParsing="false" onAction="#handleShowFriends" prefHeight="24.0" prefWidth="111.0" text="Show Friends" />
-        <Button mnemonicParsing="false" onAction="#handleSendMessage" text="Send Message" />
-    </HBox>
-    <HBox alignment="CENTER" prefHeight="37.0" prefWidth="556.0" spacing="10.0" AnchorPane.bottomAnchor="10.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
-        <Button onAction="#onAddButtonClick" text="Add" />
-        <Button onAction="#onUpdateButtonClick" text="Update" />
-        <Button onAction="#onDeleteButtonClick" text="Delete" />
-        <Button mnemonicParsing="false" onAction="#handleSendFR" text="Send Friend Request" />
-      <Button mnemonicParsing="false" onAction="#handleOpenChat" text="Open Chat" />
-        <Button mnemonicParsing="false" onAction="#handleAccept" text="Accept" />
-        <Button mnemonicParsing="false" onAction="#handleReject" text="Reject" />
-        <Button onAction="#handleExit" text="Exit" />
-    </HBox>
+<AnchorPane prefHeight="400.0" prefWidth="695.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ro.ubbcluj.map.controller.UserController">
+   <children>
+      <TabPane prefHeight="400.0" prefWidth="710.0" tabClosingPolicy="UNAVAILABLE" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+        <tabs>
+          <Tab text="Main">
+            <content>
+              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                     <children>
+                        <TableView fx:id="tableViewUsers" layoutX="14.0" layoutY="9.0" onContextMenuRequested="#contextMenuTableUsers" prefHeight="278.0" prefWidth="572.0" AnchorPane.bottomAnchor="82.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0">
+                          <columns>
+                              <TableColumn prefWidth="75.0" text="Users">
+                                 <columns>
+                                  <TableColumn fx:id="tableColumnFirstName" prefWidth="75.0" text="First Name" />
+                                  <TableColumn fx:id="tableColumnLastName" prefWidth="75.0" text="Last Name" />
+                                 </columns>
+                              </TableColumn>
+                          </columns>
+                           <columnResizePolicy>
+                              <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+                           </columnResizePolicy>
+                        </TableView>
+                        <HBox alignment="CENTER" layoutX="38.0" layoutY="295.0" prefHeight="60.0" prefWidth="513.0" spacing="10.0" AnchorPane.bottomAnchor="14.0" AnchorPane.leftAnchor="38.0" AnchorPane.rightAnchor="38.0">
+                           <children>
+                              <Button mnemonicParsing="false" onAction="#handleSendFR" prefHeight="39.0" prefWidth="171.0" text="Send Friend Request">
+                                 <font>
+                                    <Font name="Droid Sans Bold" size="14.0" />
+                                 </font></Button>
+                              <Button mnemonicParsing="false" onAction="#handleSendMessage" prefHeight="39.0" prefWidth="171.0" text="Send Message">
+                                 <font>
+                                    <Font name="Droid Sans Bold" size="14.0" />
+                                 </font></Button>
+                              <Button mnemonicParsing="false" onAction="#handleExit" prefHeight="39.0" prefWidth="171.0" text="Exit">
+                                 <font>
+                                    <Font name="Droid Sans Bold" size="14.0" />
+                                 </font></Button>
+                           </children>
+                        </HBox>
+                     </children></AnchorPane>
+            </content>
+          </Tab>
+          <Tab text="Friends">
+            <content>
+              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                     <children>
+                        <SplitPane dividerPositions="0.48788927335640137" layoutX="10.0" layoutY="9.0" prefHeight="346.0" prefWidth="690.0" AnchorPane.bottomAnchor="10.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0">
+                          <items>
+                            <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="160.0" prefWidth="100.0">
+                                 <children>
+                                    <TableView fx:id="tableViewFriends" onContextMenuRequested="#contextMenuTableUsers" prefHeight="252.0" prefWidth="238.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                      <columns>
+                                          <TableColumn prefWidth="75.0" text="Friends">
+                                             <columns>
+                                              <TableColumn fx:id="tableColumnFirstNameFriends" prefWidth="75.0" text="First Name" />
+                                              <TableColumn fx:id="tableColumnLastNameFriends" prefWidth="75.0" text="Last Name" />
+                                                <TableColumn fx:id="tableColumnFriendsFrom" prefWidth="75.0" text="Friends From" />
+                                             </columns>
+                                          </TableColumn>
+                                      </columns>
+                                       <columnResizePolicy>
+                                          <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+                                       </columnResizePolicy>
+                                    </TableView>
+                                 </children>
+                              </AnchorPane>
+                            <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="160.0" prefWidth="100.0">
+                                 <children>
+                                    <TableView fx:id="tableViewFR" onContextMenuRequested="#contextMenuTableFR" prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                      <columns>
+                                          <TableColumn prefWidth="75.0" text="Friend Requests">
+                                             <columns>
+                                                <TableColumn fx:id="tableColumnFirstNameFR" prefWidth="75.0" text="First Name" />
+                                                <TableColumn fx:id="tableColumnLastNameFR" prefWidth="75.0" text="Last Name" />
+                                                <TableColumn fx:id="tableColumnStatus" prefWidth="75.0" text="Status" />
+                                             </columns></TableColumn>
+                                      </columns>
+                                       <columnResizePolicy>
+                                          <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+                                       </columnResizePolicy>
+                                    </TableView>
+                                 </children>
+                              </AnchorPane>
+                          </items>
+                        </SplitPane>
+                     </children></AnchorPane>
+            </content>
+          </Tab>
+        </tabs>
+      </TabPane>
+   </children>
 </AnchorPane>

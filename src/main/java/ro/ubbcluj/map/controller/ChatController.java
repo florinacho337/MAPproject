@@ -3,10 +3,10 @@ package ro.ubbcluj.map.controller;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
-import javafx.scene.input.*;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.stage.Stage;
 import ro.ubbcluj.map.domain.entities.Message;
 import ro.ubbcluj.map.domain.entities.Utilizator;
@@ -65,7 +65,7 @@ public class ChatController implements Observer<UtilizatorChangeEvent> {
         if(labelReply.getText().isEmpty())
             usersService.sendMessage(u1, Collections.singletonList(u2), textFieldMessage.getText().strip());
         else{
-            usersService.replyMessage(u1, listView.getSelectionModel().getSelectedItem(), textFieldMessage.getText().strip());
+            usersService.replyMessage(u1, u2, listView.getSelectionModel().getSelectedItem(), textFieldMessage.getText().strip());
             labelReply.setText("");
         }
         textFieldMessage.clear();
@@ -76,14 +76,9 @@ public class ChatController implements Observer<UtilizatorChangeEvent> {
         initModel();
     }
 
-    public void onContextMenuReq(ContextMenuEvent contextMenuEvent) {
+    public void onContextMenuReq() {
         Message message = listView.getSelectionModel().getSelectedItem();
-        menuItemReply.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                labelReply.setText("reply to \"" + message.getContent() + "\":");
-            }
-        });
+        menuItemReply.setOnAction(event -> labelReply.setText("reply to \"" + message.getContent() + "\":"));
         contextMenu.getItems().setAll(menuItemReply);
     }
 
@@ -100,7 +95,7 @@ public class ChatController implements Observer<UtilizatorChangeEvent> {
             if(labelReply.getText().isEmpty())
                 usersService.sendMessage(u1, Collections.singletonList(u2), textFieldMessage.getText().strip());
             else{
-                usersService.replyMessage(u1, listView.getSelectionModel().getSelectedItem(), textFieldMessage.getText().strip());
+                usersService.replyMessage(u1, u2, listView.getSelectionModel().getSelectedItem(), textFieldMessage.getText().strip());
                 labelReply.setText("");
             }
             textFieldMessage.clear();

@@ -5,7 +5,7 @@ import ro.ubbcluj.map.utils.Constants;
 import java.time.LocalDateTime;
 
 
-public class Prietenie extends Entity<Tuple<Long, Long>> {
+public class Prietenie extends Entity<Tuple<String, String>> {
 
     LocalDateTime date;
     Utilizator u1, u2;

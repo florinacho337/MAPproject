@@ -12,7 +12,7 @@ import ro.ubbcluj.map.utils.observer.Observer;
 import java.util.*;
 import java.util.stream.StreamSupport;
 
-public class UsersService implements Observable<UtilizatorChangeEvent>, Service<Long, Utilizator> {
+public class UsersService implements Observable<UtilizatorChangeEvent>, Service<String, Utilizator> {
     //    InMemoryRepository<Long, Utilizator> repoUsers;
     private final UserDBRepository repoUsers;
     private final MessageDBRepository repoMessages;
@@ -34,7 +34,7 @@ public class UsersService implements Observable<UtilizatorChangeEvent>, Service<
     }
 
     @Override
-    public Utilizator remove(Long id) {
+    public Utilizator remove(String id) {
         Optional<Utilizator> user = repoUsers.delete(id);
         if (user.isPresent()) {
             notifyObservers(new UtilizatorChangeEvent(ChangeEventType.DELETE, user.get()));
@@ -44,7 +44,7 @@ public class UsersService implements Observable<UtilizatorChangeEvent>, Service<
     }
 
     @Override
-    public Utilizator find(Long id) {
+    public Utilizator find(String id) {
         Optional<Utilizator> user = repoUsers.findOne(id);
         return user.orElse(null);
     }
@@ -60,28 +60,28 @@ public class UsersService implements Observable<UtilizatorChangeEvent>, Service<
         return entity;
     }
 
-    public Message sendMessage(Utilizator from, List<Utilizator> to, String content){
-        Optional<Message> optionalMessage = repoMessages.save(new Message(from, to, content, null));
+    public void sendMessage(Utilizator from, List<Utilizator> to, String content){
+        repoMessages.save(new Message(from, to, content, null));
         notifyObservers(new UtilizatorChangeEvent(ChangeEventType.ADD, null));
-        return optionalMessage.orElse(null);
     }
 
-    public Message replyMessage(Utilizator from, Message replyTo, String content){
-        Optional<Message> optionalMessage = repoMessages.save(new Message(from, Collections.singletonList(replyTo.getFrom()), content, replyTo));
+    public void replyMessage(Utilizator from, Utilizator to, Message replyTo, String content){
+        repoMessages.save(new Message(from, Collections.singletonList(to), content, replyTo));
         notifyObservers(new UtilizatorChangeEvent(ChangeEventType.ADD, null));
-        return optionalMessage.orElse(null);
     }
 
     public Iterable<Message> getMessages(Utilizator u1, Utilizator u2){
         Iterable<Message> messages = repoMessages.findAll();
         return StreamSupport.stream(messages.spliterator(), false)
                 .filter(message -> {
-                    if(Objects.equals(message.getFrom().getId(), u1.getId()) && !message.getTo().stream()
+                    if(Objects.equals(message.getFrom().getId(), u1.getId()) &&
+                            !message.getTo().stream()
                             .filter(utilizator -> Objects.equals(utilizator.getId(), u2.getId()))
                             .toList()
                             .isEmpty())
                         return true;
-                    return Objects.equals(message.getFrom().getId(), u2.getId()) && !message.getTo().stream()
+                    return Objects.equals(message.getFrom().getId(), u2.getId()) &&
+                            !message.getTo().stream()
                             .filter(utilizator -> Objects.equals(utilizator.getId(), u1.getId()))
                             .toList()
                             .isEmpty();

@@ -4,6 +4,7 @@ import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+import ro.ubbcluj.map.controller.LoginRegisterController;
 import ro.ubbcluj.map.repository.dbrepositories.FriendRequestDBRepo;
 import ro.ubbcluj.map.repository.dbrepositories.FriendshipDBRepository;
 import ro.ubbcluj.map.repository.dbrepositories.MessageDBRepository;
@@ -31,13 +32,15 @@ public class UserApplication extends Application {
         initView(primaryStage);
         primaryStage.show();
     }
+
     private void initView(Stage primaryStage) throws IOException {
 
-        FXMLLoader usersLoader = new FXMLLoader(UserApplication.class.getResource("user-view.fxml"));
+        FXMLLoader usersLoader = new FXMLLoader(UserApplication.class.getResource("login-view.fxml"));
         primaryStage.setScene(new Scene(usersLoader.load()));
+        primaryStage.setTitle("Login");
 
-        UserController userController = usersLoader.getController();
-        userController.setUsersService(usersService, friendshipsService, primaryStage);
+        LoginRegisterController loginRegisterController = usersLoader.getController();
+        loginRegisterController.setUsersService(usersService, friendshipsService, primaryStage);
 
     }
 

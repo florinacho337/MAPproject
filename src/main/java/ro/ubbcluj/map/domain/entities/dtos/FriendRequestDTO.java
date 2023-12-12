@@ -1,33 +1,41 @@
 package ro.ubbcluj.map.domain.entities.dtos;
 
 import ro.ubbcluj.map.domain.entities.FriendRequest;
+import ro.ubbcluj.map.domain.entities.Utilizator;
 
 public class FriendRequestDTO {
-    FriendRequest friendRequest;
-    Long from;
-    Long to;
-    String status;
+    private final FriendRequest friendRequest;
+    private String from;
+    private final String firstNameFrom;
+    private final String lastNameFrom;
+    private String to;
+    private String status;
 
     public FriendRequestDTO(FriendRequest friendRequest) {
         this.friendRequest = friendRequest;
         from = friendRequest.getFrom().getId();
         to = friendRequest.getTo().getId();
         status = friendRequest.getStatus();
+        firstNameFrom = friendRequest.getFrom().getFirstName();
+        lastNameFrom = friendRequest.getFrom().getLastName();
     }
 
-    public Long getFrom() {
+    public String getFirstNameFrom(){return firstNameFrom;}
+    public String getLastNameFrom(){return lastNameFrom;}
+
+    public String getFrom() {
         return from;
     }
 
-    public void setFrom(Long from) {
+    public void setFrom(String from) {
         this.from = from;
     }
 
-    public Long getTo() {
+    public String getTo() {
         return to;
     }
 
-    public void setTo(Long to) {
+    public void setTo(String to) {
         this.to = to;
     }
 
