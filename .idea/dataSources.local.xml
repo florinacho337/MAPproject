@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="dataSourceStorageLocal" created-in="IU-233.11799.241">
+  <component name="dataSourceStorageLocal" created-in="IU-233.11799.300">
     <data-source name="socialnetwork@localhost" uuid="1690ab3f-1ff6-4123-a410-b5e7c6fe68fd">
       <database-info product="PostgreSQL" version="16.0 (Ubuntu 16.0-1.pgdg22.04+1)" jdbc-version="4.2" driver-name="PostgreSQL JDBC Driver" driver-version="42.6.0" dbms="POSTGRES" exact-version="16.0" exact-driver-version="42.6">
         <identifier-quote-string>&quot;</identifier-quote-string>

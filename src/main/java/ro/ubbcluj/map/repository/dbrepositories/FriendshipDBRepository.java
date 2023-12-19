@@ -6,6 +6,7 @@ import ro.ubbcluj.map.domain.entities.Utilizator;
 import ro.ubbcluj.map.domain.validators.PrietenieValidator;
 import ro.ubbcluj.map.domain.validators.Validator;
 import ro.ubbcluj.map.repository.Repository;
+import ro.ubbcluj.map.repository.pagingrepositories.FriendshipDBPagingRepository;
 import ro.ubbcluj.map.utils.Constants;
 
 import java.sql.*;
@@ -15,9 +16,9 @@ import java.util.Set;
 
 public class FriendshipDBRepository implements Repository<Tuple<String, String>, Prietenie> {
 
-    private final String url;
-    private final String username;
-    private final String password;
+    protected final String url;
+    protected final String username;
+    protected final String password;
     private final Validator<Prietenie> validator;
 
     public FriendshipDBRepository(String url, String username, String password) {
@@ -72,26 +73,7 @@ public class FriendshipDBRepository implements Repository<Tuple<String, String>,
              ResultSet resultSet = statement.executeQuery()
         ) {
 
-            while (resultSet.next())
-            {
-                String idU1 = resultSet.getString("username1");
-                String idU2 = resultSet.getString("username2");
-                String friendsFrom = resultSet.getString("friendsFrom");
-                String fristNameU1 = resultSet.getString("firstNameU1");
-                String fristNameU2 = resultSet.getString("firstNameU2");
-                String lastNameU1 = resultSet.getString("lastNameU1");
-                String lastNameU2 = resultSet.getString("lastNameU2");
-                String passwordU1 = resultSet.getString("passwordU1");
-                String passwordU2 = resultSet.getString("passwordU2");
-                Utilizator u1 = new Utilizator(fristNameU1, lastNameU1, idU1, passwordU1);
-                Utilizator u2 = new Utilizator(fristNameU2, lastNameU2, idU2, passwordU2);
-                u1.setId(idU1);
-                u2.setId(idU2);
-                Prietenie prietenie = new Prietenie(u1, u2, friendsFrom);
-                Tuple<String, String> id = new Tuple<>(idU1, idU2);
-                prietenie.setId(id);
-                prietenii.add(prietenie);
-            }
+            extractResult(prietenii, resultSet);
             return prietenii;
 
         } catch (SQLException e) {
@@ -139,4 +121,27 @@ public class FriendshipDBRepository implements Repository<Tuple<String, String>,
 
     @Override
     public Optional<Prietenie> update(Prietenie entity) {return Optional.empty();}
+
+    protected static void extractResult(Set<Prietenie> prietenii, ResultSet resultSet) throws SQLException {
+        while (resultSet.next())
+        {
+            String idU1 = resultSet.getString("username1");
+            String idU2 = resultSet.getString("username2");
+            String friendsFrom = resultSet.getString("friendsFrom");
+            String fristNameU1 = resultSet.getString("firstNameU1");
+            String fristNameU2 = resultSet.getString("firstNameU2");
+            String lastNameU1 = resultSet.getString("lastNameU1");
+            String lastNameU2 = resultSet.getString("lastNameU2");
+            String passwordU1 = resultSet.getString("passwordU1");
+            String passwordU2 = resultSet.getString("passwordU2");
+            Utilizator u1 = new Utilizator(fristNameU1, lastNameU1, idU1, passwordU1);
+            Utilizator u2 = new Utilizator(fristNameU2, lastNameU2, idU2, passwordU2);
+            u1.setId(idU1);
+            u2.setId(idU2);
+            Prietenie prietenie = new Prietenie(u1, u2, friendsFrom);
+            Tuple<String, String> id = new Tuple<>(idU1, idU2);
+            prietenie.setId(id);
+            prietenii.add(prietenie);
+        }
+    }
 }

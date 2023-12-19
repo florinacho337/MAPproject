@@ -4,9 +4,12 @@ import ro.ubbcluj.map.domain.entities.FriendRequest;
 import ro.ubbcluj.map.domain.entities.Prietenie;
 import ro.ubbcluj.map.domain.entities.Tuple;
 import ro.ubbcluj.map.domain.entities.Utilizator;
-import ro.ubbcluj.map.repository.dbrepositories.FriendRequestDBRepo;
-import ro.ubbcluj.map.repository.dbrepositories.FriendshipDBRepository;
-import ro.ubbcluj.map.repository.dbrepositories.UserDBRepository;
+import ro.ubbcluj.map.repository.paging.Page;
+import ro.ubbcluj.map.repository.paging.Pageable;
+import ro.ubbcluj.map.repository.paging.PageableImplementation;
+import ro.ubbcluj.map.repository.pagingrepositories.FriendRequestDBPagingRepository;
+import ro.ubbcluj.map.repository.pagingrepositories.FriendshipDBPagingRepository;
+import ro.ubbcluj.map.repository.pagingrepositories.UserDBPagingRepository;
 import ro.ubbcluj.map.utils.Constants;
 import ro.ubbcluj.map.utils.events.ChangeEventType;
 import ro.ubbcluj.map.utils.events.UtilizatorChangeEvent;
@@ -17,6 +20,7 @@ import ro.ubbcluj.map.utils.observer.Observer;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 public class FriendshipsService implements Service<Tuple<String, String>, Prietenie>, Observable<UtilizatorChangeEvent> {
@@ -24,16 +28,24 @@ public class FriendshipsService implements Service<Tuple<String, String>, Priete
 //    InMemoryRepository<Long, Utilizator> repoUsers;
 //    InMemoryRepository<Long, FriendRequest> repoFriendRequests;
 
-    private final FriendshipDBRepository repoFriendships;
-    private final UserDBRepository repoUsers;
-    private final FriendRequestDBRepo repoFriendRequests;
+//    private final FriendshipDBRepository repoFriendships;
+//    private final UserDBRepository repoUsers;
+//    private final FriendRequestDBRepo repoFriendRequests;
+    private final FriendshipDBPagingRepository repoFriendships;
+    private final UserDBPagingRepository repoUsers;
+    private final FriendRequestDBPagingRepository repoFriendRequests;
+    private int page;
+    private int pageSize;
+    private Pageable pageable;
     private String startingNode;
     private final List<Observer<UtilizatorChangeEvent>> observers = new ArrayList<>();
 
-    public FriendshipsService(FriendshipDBRepository repoFriendships, UserDBRepository repoUsers, FriendRequestDBRepo repoFriendRequests) {
+    public FriendshipsService(FriendshipDBPagingRepository repoFriendships, UserDBPagingRepository repoUsers, FriendRequestDBPagingRepository repoFriendRequests) {
         this.repoFriendships = repoFriendships;
         this.repoUsers = repoUsers;
         this.repoFriendRequests = repoFriendRequests;
+        this.page = 0;
+        this.pageSize = 100;
     }
 
     @Override
@@ -274,5 +286,37 @@ public class FriendshipsService implements Service<Tuple<String, String>, Priete
     @Override
     public void notifyObservers(UtilizatorChangeEvent t) {
         observers.forEach(x -> x.update(t));
+    }
+
+    public void setPageSize(int size) {
+        this.pageSize = size;
+    }
+
+//    public void setPageable(Pageable pageable) {
+//        this.pageable = pageable;
+//    }
+
+//    public Set<Prietenie> getNextFriendships() {
+//        this.page++;
+//        return getFriendshipsOnPage(this.page);
+//    }
+
+    public Set<Prietenie> getFriendshipsOnPage(int page, Utilizator utilizator) {
+        this.page=page;
+        Pageable pageable = new PageableImplementation(page, this.pageSize);
+        Page<Prietenie> friendshipPage = repoFriendships.findAll(pageable, utilizator.getId());
+        return friendshipPage.getContent().collect(Collectors.toSet());
+    }
+
+//    public Set<FriendRequest> getNextFriendRequests() {
+//        this.page++;
+//        return getFriendRequestsOnPage(this.page);
+//    }
+
+    public Set<FriendRequest> getFriendRequestsOnPage(int page, Utilizator utilizator) {
+        this.page=page;
+        Pageable pageable = new PageableImplementation(page, this.pageSize);
+        Page<FriendRequest> friendRequestPage = repoFriendRequests.findAll(pageable, utilizator.getId());
+        return friendRequestPage.getContent().collect(Collectors.toSet());
     }
 }

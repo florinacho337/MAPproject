@@ -3,22 +3,30 @@ package ro.ubbcluj.map.service;
 import ro.ubbcluj.map.domain.entities.Message;
 import ro.ubbcluj.map.domain.entities.Utilizator;
 import ro.ubbcluj.map.repository.dbrepositories.MessageDBRepository;
-import ro.ubbcluj.map.repository.dbrepositories.UserDBRepository;
+import ro.ubbcluj.map.repository.paging.Page;
+import ro.ubbcluj.map.repository.paging.Pageable;
+import ro.ubbcluj.map.repository.paging.PageableImplementation;
+import ro.ubbcluj.map.repository.pagingrepositories.UserDBPagingRepository;
 import ro.ubbcluj.map.utils.events.ChangeEventType;
 import ro.ubbcluj.map.utils.events.UtilizatorChangeEvent;
 import ro.ubbcluj.map.utils.observer.Observable;
 import ro.ubbcluj.map.utils.observer.Observer;
 
 import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 public class UsersService implements Observable<UtilizatorChangeEvent>, Service<String, Utilizator> {
     //    InMemoryRepository<Long, Utilizator> repoUsers;
-    private final UserDBRepository repoUsers;
+//    private final UserDBRepository repoUsers;
     private final MessageDBRepository repoMessages;
+    private final UserDBPagingRepository repoUsers;
     private final List<Observer<UtilizatorChangeEvent>> observers = new ArrayList<>();
+    private int page;
+    private int pageSize;
+    private Pageable pageable;
 
-    public UsersService(UserDBRepository repoUsers, MessageDBRepository repoMessages) {
+    public UsersService(UserDBPagingRepository repoUsers, MessageDBRepository repoMessages) {
         this.repoMessages = repoMessages;
         this.repoUsers = repoUsers;
     }
@@ -26,7 +34,7 @@ public class UsersService implements Observable<UtilizatorChangeEvent>, Service<
     @Override
     public Utilizator add(Utilizator E) {
         Optional<Utilizator> user = repoUsers.save(E);
-        if(user.isPresent()){
+        if (user.isPresent()) {
             return E;
         }
         notifyObservers(new UtilizatorChangeEvent(ChangeEventType.ADD, null));
@@ -60,31 +68,31 @@ public class UsersService implements Observable<UtilizatorChangeEvent>, Service<
         return entity;
     }
 
-    public void sendMessage(Utilizator from, List<Utilizator> to, String content){
+    public void sendMessage(Utilizator from, List<Utilizator> to, String content) {
         repoMessages.save(new Message(from, to, content, null));
         notifyObservers(new UtilizatorChangeEvent(ChangeEventType.ADD, null));
     }
 
-    public void replyMessage(Utilizator from, Utilizator to, Message replyTo, String content){
+    public void replyMessage(Utilizator from, Utilizator to, Message replyTo, String content) {
         repoMessages.save(new Message(from, Collections.singletonList(to), content, replyTo));
         notifyObservers(new UtilizatorChangeEvent(ChangeEventType.ADD, null));
     }
 
-    public Iterable<Message> getMessages(Utilizator u1, Utilizator u2){
+    public Iterable<Message> getMessages(Utilizator u1, Utilizator u2) {
         Iterable<Message> messages = repoMessages.findAll();
         return StreamSupport.stream(messages.spliterator(), false)
                 .filter(message -> {
-                    if(Objects.equals(message.getFrom().getId(), u1.getId()) &&
+                    if (Objects.equals(message.getFrom().getId(), u1.getId()) &&
                             !message.getTo().stream()
-                            .filter(utilizator -> Objects.equals(utilizator.getId(), u2.getId()))
-                            .toList()
-                            .isEmpty())
+                                    .filter(utilizator -> Objects.equals(utilizator.getId(), u2.getId()))
+                                    .toList()
+                                    .isEmpty())
                         return true;
                     return Objects.equals(message.getFrom().getId(), u2.getId()) &&
                             !message.getTo().stream()
-                            .filter(utilizator -> Objects.equals(utilizator.getId(), u1.getId()))
-                            .toList()
-                            .isEmpty();
+                                    .filter(utilizator -> Objects.equals(utilizator.getId(), u1.getId()))
+                                    .toList()
+                                    .isEmpty();
                 }).toList();
     }
 
@@ -106,5 +114,25 @@ public class UsersService implements Observable<UtilizatorChangeEvent>, Service<
     @Override
     public void notifyObservers(UtilizatorChangeEvent t) {
         observers.forEach(x -> x.update(t));
+    }
+
+    public void setPageSize(int size) {
+        this.pageSize = size;
+    }
+
+//    public void setPageable(Pageable pageable) {
+//        this.pageable = pageable;
+//    }
+
+//    public Set<Utilizator> getNextUsers() {
+//        this.page++;
+//        return getUsersOnPage(this.page);
+//    }
+
+    public Set<Utilizator> getUsersOnPage(int page, Utilizator utilizator) {
+        this.page=page;
+        Pageable pageable = new PageableImplementation(page, this.pageSize);
+        Page<Utilizator> userPage = repoUsers.findAll(pageable, utilizator.getId());
+        return userPage.getContent().collect(Collectors.toSet());
     }
 }

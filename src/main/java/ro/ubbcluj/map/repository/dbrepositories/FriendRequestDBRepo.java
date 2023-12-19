@@ -12,9 +12,9 @@ import java.util.Optional;
 import java.util.Set;
 
 public class FriendRequestDBRepo implements Repository<Long, FriendRequest> {
-    private final String url;
-    private final String username;
-    private final String password;
+    protected final String url;
+    protected final String username;
+    protected final String password;
     private final FriendRequestValidator validator;
 
     public FriendRequestDBRepo(String url, String username, String password) {
@@ -24,7 +24,7 @@ public class FriendRequestDBRepo implements Repository<Long, FriendRequest> {
         this.validator = new FriendRequestValidator();
     }
 
-    private void setFriends(Utilizator utilizator){
+    protected void setFriends(Utilizator utilizator){
         try(Connection connection = DriverManager.getConnection(url, username, password);
             PreparedStatement statement = connection.prepareStatement("select * from friendships "+
                     "where username1 = ? or username2 = ?")
@@ -105,32 +105,36 @@ public class FriendRequestDBRepo implements Repository<Long, FriendRequest> {
              ResultSet resultSet = statement.executeQuery()
         ) {
 
-            while (resultSet.next())
-            {
-                String from = resultSet.getString("from");
-                String to = resultSet.getString("to");
-                Long id = resultSet.getLong("id");
-                String status = resultSet.getString("status");
-                String fristNameU1 = resultSet.getString("firstNameFrom");
-                String fristNameU2 = resultSet.getString("firstNameTo");
-                String passwordFrom = resultSet.getString("passwordFrom");
-                String lastNameU1 = resultSet.getString("lastNameFrom");
-                String lastNameU2 = resultSet.getString("lastNameTo");
-                String passwordTo = resultSet.getString("passwordTo");
-                Utilizator u1 = new Utilizator(fristNameU1, lastNameU1, from, passwordFrom);
-                Utilizator u2 = new Utilizator(fristNameU2, lastNameU2, to, passwordTo);
-                u1.setId(from);
-                u2.setId(to);
-                setFriends(u1);
-                setFriends(u2);
-                FriendRequest friendRequest = new FriendRequest(u1, u2, status);
-                friendRequest.setId(id);
-                friendRequests.add(friendRequest);
-            }
+            extractResult(resultSet, friendRequests);
             return friendRequests;
 
         } catch (SQLException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    protected void extractResult(ResultSet resultSet, Set<FriendRequest> friendRequests) throws SQLException {
+        while (resultSet.next())
+        {
+            String from = resultSet.getString("from");
+            String to = resultSet.getString("to");
+            Long id = resultSet.getLong("id");
+            String status = resultSet.getString("status");
+            String fristNameU1 = resultSet.getString("firstNameFrom");
+            String fristNameU2 = resultSet.getString("firstNameTo");
+            String passwordFrom = resultSet.getString("passwordFrom");
+            String lastNameU1 = resultSet.getString("lastNameFrom");
+            String lastNameU2 = resultSet.getString("lastNameTo");
+            String passwordTo = resultSet.getString("passwordTo");
+            Utilizator u1 = new Utilizator(fristNameU1, lastNameU1, from, passwordFrom);
+            Utilizator u2 = new Utilizator(fristNameU2, lastNameU2, to, passwordTo);
+            u1.setId(from);
+            u2.setId(to);
+            setFriends(u1);
+            setFriends(u2);
+            FriendRequest friendRequest = new FriendRequest(u1, u2, status);
+            friendRequest.setId(id);
+            friendRequests.add(friendRequest);
         }
     }
 

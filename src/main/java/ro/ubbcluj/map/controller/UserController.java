@@ -31,6 +31,16 @@ import java.util.stream.StreamSupport;
 
 public class UserController implements Observer<UtilizatorChangeEvent> {
     @FXML
+    private Pagination usersPagination;
+    @FXML
+    private Pagination friendsPagination;
+    @FXML
+    private Pagination friendRequestsPagination;
+    @FXML
+    private TextField textFieldMaxEntities;
+    @FXML
+    private TextField textFieldMaxUsers;
+    @FXML
     private TableColumn<Utilizator, String> tableColumnFirstName;
     @FXML
     private TableColumn<Utilizator, String> tableColumnLastName;
@@ -52,10 +62,6 @@ public class UserController implements Observer<UtilizatorChangeEvent> {
     private TableView<PrietenDTO> tableViewFriends;
     @FXML
     private TableView<Utilizator> tableViewUsers;
-    @FXML
-    private ContextMenu contextMenuU;
-    @FXML
-    private ContextMenu contextMenuFR;
 
     @FXML
     private final MenuItem menuItemOpenChat = new MenuItem("Open Chat");
@@ -71,15 +77,19 @@ public class UserController implements Observer<UtilizatorChangeEvent> {
     private UsersService usersService;
     private FriendshipsService friendshipsService;
     private Utilizator utilizator;
+    private int usersPageSize;
+    private int entitiesPageSize;
     private Stage stage;
 
-    public void setUserService(UsersService usersService, FriendshipsService friendshipsService, Utilizator utilizator, Stage stage){
+    public void setService(UsersService usersService, FriendshipsService friendshipsService, Utilizator utilizator, Stage stage) {
         this.usersService = usersService;
         this.friendshipsService = friendshipsService;
         this.utilizator = utilizator;
         this.stage = stage;
         usersService.addObserver(this);
         friendshipsService.addObserver(this);
+        usersPageSize = 10;
+        entitiesPageSize = 10;
         initModel();
     }
 
@@ -97,12 +107,26 @@ public class UserController implements Observer<UtilizatorChangeEvent> {
         tableViewUsers.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         tableViewFR.setItems(modelFR);
         tableViewFriends.setItems(modelFriends);
-        contextMenuU = new ContextMenu(menuItemOpenChat);
+        ContextMenu contextMenuU = new ContextMenu(menuItemOpenChat);
         tableViewFriends.setContextMenu(contextMenuU);
         tableViewUsers.setContextMenu(contextMenuU);
-        contextMenuFR = new ContextMenu(menuItemAccept, menuItemReject);
+        ContextMenu contextMenuFR = new ContextMenu(menuItemAccept, menuItemReject);
         tableViewFR.setContextMenu(contextMenuFR);
-
+        usersPagination.setMaxPageIndicatorCount(3);
+        friendsPagination.setMaxPageIndicatorCount(3);
+        friendRequestsPagination.setMaxPageIndicatorCount(3);
+        usersPagination.setPageFactory(param -> {
+            initUsers(param+1);
+            return tableViewUsers;
+        });
+        friendsPagination.setPageFactory(param -> {
+            initFriends(param+1);
+            return tableViewFriends;
+        });
+        friendRequestsPagination.setPageFactory(param -> {
+            initFR(param+1);
+            return tableViewFR;
+        });
     }
 
     public void handleSendFR(ActionEvent actionEvent) {
@@ -112,7 +136,7 @@ public class UserController implements Observer<UtilizatorChangeEvent> {
                 MessageAlert.showMessage(null, Alert.AlertType.INFORMATION, "Friend Request", "Cerere de prietenie trimisa cu succes!");
             else
                 MessageAlert.showErrorMessage(null, "Cerere de prietenie existenta!");
-        } catch (DuplicateException e){
+        } catch (DuplicateException e) {
             MessageAlert.showErrorMessage(null, e.getMessage());
         }
     }
@@ -135,7 +159,7 @@ public class UserController implements Observer<UtilizatorChangeEvent> {
             controller.setService(usersService, dialogStage, utilizator, to);
 
             dialogStage.show();
-        } catch (IOException e){
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
@@ -150,29 +174,50 @@ public class UserController implements Observer<UtilizatorChangeEvent> {
     }
 
     private void initModel() {
-        initFriends();
-        initFR();
-        initUsers();
+        initFriends(1);
+        initFR(1);
+        initUsers(1);
     }
 
-    private void initUsers() {
-        List<Utilizator> usersList = StreamSupport.stream(usersService.getAll().spliterator(), false).filter(user -> !(Objects.equals(user.getId(), utilizator.getId()))).toList();
+    private void initUsers(int page) {
+        List<Utilizator> users = StreamSupport.stream(usersService.getAll().spliterator(), false)
+                .filter(utilizator1 -> !Objects.equals(utilizator1.getId(), utilizator.getId()))
+                .toList();
+        if(users.size() < usersPageSize)
+            usersPagination.setPageCount(1);
+        else
+            usersPagination.setPageCount(users.size() / usersPageSize + users.size() % usersPageSize);
+        usersService.setPageSize(usersPageSize);
+        List<Utilizator> usersList = usersService.getUsersOnPage(page, utilizator).stream().toList();
         modelUsers.setAll(usersList);
     }
 
-    private void initFR() {
-        Iterable<FriendRequest> friendRequests = friendshipsService.getFriendRequests();
-        List<FriendRequestDTO> friendRequestDTOList = StreamSupport.stream(friendRequests.spliterator(), false)
+    private void initFR(int page) {
+        List<FriendRequest> friendRequests = StreamSupport.stream(friendshipsService.getFriendRequests().spliterator(), false)
+                .filter(friendRequest -> Objects.equals(friendRequest.getTo().getId(), utilizator.getId()))
+                .toList();
+        if(friendRequests.size() < entitiesPageSize)
+            friendRequestsPagination.setPageCount(1);
+        else
+            friendRequestsPagination.setPageCount(friendRequests.size() / entitiesPageSize + friendRequests.size() % entitiesPageSize);
+        friendshipsService.setPageSize(entitiesPageSize);
+        List<FriendRequestDTO> friendRequestDTOList = friendshipsService.getFriendRequestsOnPage(page, utilizator)
+                .stream()
                 .map(FriendRequestDTO::new)
-                .filter(friendRequestDTO -> Objects.equals(friendRequestDTO.getTo(), utilizator.getId()))
                 .toList();
         modelFR.setAll(friendRequestDTOList);
     }
 
-    private void initFriends() {
-        Iterable<Prietenie> friendships = friendshipsService.getAll();
-        List<PrietenDTO> prieteniiUser = StreamSupport.stream(friendships.spliterator(), false)
-                .filter(prietenie -> Objects.equals(prietenie.getU1().getId(), utilizator.getId()) || Objects.equals(prietenie.getU2().getId(), utilizator.getId()))
+    private void initFriends(int page) {
+        List<Prietenie> prietenii = StreamSupport.stream(friendshipsService.getAll().spliterator(), false)
+                .filter(prietenie -> Objects.equals(prietenie.getU1().getUsername(), utilizator.getId()) || Objects.equals(prietenie.getU2().getUsername(), utilizator.getId()))
+                .toList();
+        if(prietenii.size() < entitiesPageSize)
+            friendsPagination.setPageCount(1);
+        else
+            friendsPagination.setPageCount(prietenii.size() / entitiesPageSize + prietenii.size() % entitiesPageSize);
+        List<PrietenDTO> prieteniiUser = friendshipsService.getFriendshipsOnPage(page, utilizator)
+                .stream()
                 .map(prietenie -> new PrietenDTO(prietenie, utilizator)).toList();
         modelFriends.setAll(prieteniiUser);
     }
@@ -220,7 +265,7 @@ public class UserController implements Observer<UtilizatorChangeEvent> {
         menuItemReject.setOnAction(event -> {
             FriendRequestDTO friendRequestDTO = tableViewFR.getSelectionModel().getSelectedItem();
             FriendRequest friendRequest = friendRequestDTO.getFriendRequest();
-            if(Objects.equals(friendRequest.getStatus(), "approved") || Objects.equals(friendRequest.getStatus(), "rejected"))
+            if (Objects.equals(friendRequest.getStatus(), "approved") || Objects.equals(friendRequest.getStatus(), "rejected"))
                 MessageAlert.showErrorMessage(null, "Cererea de prietenie a fost deja acceptata sau refuzata!");
             else {
                 friendRequest = friendshipsService.rejectFriendRequest(friendRequest);
@@ -230,5 +275,24 @@ public class UserController implements Observer<UtilizatorChangeEvent> {
                     MessageAlert.showMessage(null, Alert.AlertType.INFORMATION, "Reject", "Cerere de prietenie refuzata!");
             }
         });
+    }
+
+    public void handleSetMaxUsers(ActionEvent actionEvent) {
+        if (textFieldMaxUsers.getText().isBlank()) {
+            MessageAlert.showErrorMessage(null, "Nu ati setat nici o valoare!");
+            return;
+        }
+        this.usersPageSize = Integer.parseInt(textFieldMaxUsers.getText());
+        initUsers(1);
+    }
+
+    public void handleSetMaxEntities(ActionEvent actionEvent) {
+        if (textFieldMaxEntities.getText().isBlank()) {
+            MessageAlert.showErrorMessage(null, "Nu ati setat nici o valoare!");
+            return;
+        }
+        this.entitiesPageSize = Integer.parseInt(textFieldMaxEntities.getText());
+        initFR(1);
+        initFriends(1);
     }
 }

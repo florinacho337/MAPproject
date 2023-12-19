@@ -104,7 +104,7 @@ public class LoginRegisterController {
         userStage.setTitle(utilizator.getFirstName() + " " + utilizator.getLastName());
 
         UserController userController = usersLoader.getController();
-        userController.setUserService(usersService, friendshipsService, utilizator, userStage);
+        userController.setService(usersService, friendshipsService, utilizator, userStage);
 
         userStage.show();
     }

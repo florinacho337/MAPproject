@@ -11,9 +11,9 @@ import java.time.LocalDateTime;
 import java.util.*;
 
 public class MessageDBRepository implements Repository<Long, Message> {
-    private final String url;
-    private final String username;
-    private final String password;
+    protected final String url;
+    protected final String username;
+    protected final String password;
     private final MessageValidator validator;
 
     public MessageDBRepository(String url, String username, String password) {

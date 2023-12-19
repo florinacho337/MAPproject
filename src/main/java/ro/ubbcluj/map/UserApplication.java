@@ -9,6 +9,9 @@ import ro.ubbcluj.map.repository.dbrepositories.FriendRequestDBRepo;
 import ro.ubbcluj.map.repository.dbrepositories.FriendshipDBRepository;
 import ro.ubbcluj.map.repository.dbrepositories.MessageDBRepository;
 import ro.ubbcluj.map.repository.dbrepositories.UserDBRepository;
+import ro.ubbcluj.map.repository.pagingrepositories.FriendRequestDBPagingRepository;
+import ro.ubbcluj.map.repository.pagingrepositories.FriendshipDBPagingRepository;
+import ro.ubbcluj.map.repository.pagingrepositories.UserDBPagingRepository;
 import ro.ubbcluj.map.service.FriendshipsService;
 import ro.ubbcluj.map.service.UsersService;
 
@@ -22,9 +25,9 @@ public class UserApplication extends Application {
         String url = "jdbc:postgresql://localhost:5432/socialnetwork";
         String username = "postgres";
         String password = "postgres";
-        UserDBRepository repoUsers = new UserDBRepository(url, username, password);
-        FriendRequestDBRepo friendRequestDBRepo = new FriendRequestDBRepo(url, username, password);
-        FriendshipDBRepository friendshipDBRepository = new FriendshipDBRepository(url, username, password);
+        UserDBPagingRepository repoUsers = new UserDBPagingRepository(url, username, password);
+        FriendRequestDBPagingRepository friendRequestDBRepo = new FriendRequestDBPagingRepository(url, username, password);
+        FriendshipDBPagingRepository friendshipDBRepository = new FriendshipDBPagingRepository(url, username, password);
         friendshipsService = new FriendshipsService(friendshipDBRepository, repoUsers, friendRequestDBRepo);
         MessageDBRepository repoMessages = new MessageDBRepository(url,username, password);
         usersService = new UsersService(repoUsers, repoMessages);

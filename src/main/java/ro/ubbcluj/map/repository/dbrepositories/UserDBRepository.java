@@ -13,9 +13,9 @@ import java.util.Set;
 
 public class UserDBRepository implements Repository<String, Utilizator> {
 
-    private final String url;
-    private final String username;
-    private final String password;
+    protected final String url;
+    protected final String username;
+    protected final String password;
     private final Validator<Utilizator> validator;
 
     public UserDBRepository(String url, String username, String password) {
@@ -82,7 +82,7 @@ public class UserDBRepository implements Repository<String, Utilizator> {
     }
 
     @Override
-    public Iterable<Utilizator> findAll() {
+    public  Iterable<Utilizator> findAll() {
         Set<Utilizator> users = new HashSet<>();
 
         try (Connection connection = DriverManager.getConnection(url, username, password);
@@ -92,12 +92,7 @@ public class UserDBRepository implements Repository<String, Utilizator> {
 
             while (resultSet.next())
             {
-                String id= resultSet.getString("username");
-                String firstName=resultSet.getString("first_name");
-                String lastName=resultSet.getString("last_name");
-                String password = resultSet.getString("password");
-                Utilizator user=new Utilizator(firstName,lastName, id, password);
-                user.setId(id);
+                Utilizator user = extractUser(resultSet);
                 setFriends(user);
                 users.add(user);
             }
@@ -162,5 +157,15 @@ public class UserDBRepository implements Repository<String, Utilizator> {
         } catch (SQLException e){
             throw new RuntimeException(e);
         }
+    }
+
+    protected static Utilizator extractUser(ResultSet resultSet) throws SQLException {
+        String username= resultSet.getString("username");
+        String firstName=resultSet.getString("first_name");
+        String lastName=resultSet.getString("last_name");
+        String password = resultSet.getString("password");
+        Utilizator user=new Utilizator(firstName,lastName, username, password);
+        user.setId(username);
+        return user;
     }
 }

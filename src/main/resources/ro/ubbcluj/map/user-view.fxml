@@ -4,15 +4,15 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 
-<AnchorPane prefHeight="400.0" prefWidth="695.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ro.ubbcluj.map.controller.UserController">
+<AnchorPane prefHeight="539.0" prefWidth="695.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ro.ubbcluj.map.controller.UserController">
    <children>
-      <TabPane prefHeight="400.0" prefWidth="710.0" tabClosingPolicy="UNAVAILABLE" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+      <TabPane layoutY="1.0" prefHeight="449.0" prefWidth="695.0" tabClosingPolicy="UNAVAILABLE" AnchorPane.bottomAnchor="-1.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="1.0">
         <tabs>
           <Tab text="Main">
             <content>
               <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                      <children>
-                        <TableView fx:id="tableViewUsers" layoutX="14.0" layoutY="9.0" onContextMenuRequested="#contextMenuTableUsers" prefHeight="278.0" prefWidth="572.0" AnchorPane.bottomAnchor="82.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0">
+                        <TableView fx:id="tableViewUsers" layoutX="14.0" layoutY="9.0" onContextMenuRequested="#contextMenuTableUsers" prefHeight="330.0" prefWidth="675.0" AnchorPane.bottomAnchor="168.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0">
                           <columns>
                               <TableColumn prefWidth="75.0" text="Users">
                                  <columns>
@@ -41,6 +41,18 @@
                                  </font></Button>
                            </children>
                         </HBox>
+                        <Pagination fx:id="usersPagination" prefHeight="393.0" prefWidth="695.0" AnchorPane.bottomAnchor="115.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                        <HBox alignment="CENTER" layoutX="248.0" layoutY="393.0" prefHeight="45.0" prefWidth="200.0" spacing="10.0" AnchorPane.bottomAnchor="70.0" AnchorPane.leftAnchor="38.0" AnchorPane.rightAnchor="38.0">
+                           <children>
+                              <Label alignment="CENTER" contentDisplay="CENTER" text="Max Users on a page:">
+                                 <font>
+                                    <Font size="16.0" />
+                                 </font>
+                              </Label>
+                              <TextField fx:id="textFieldMaxUsers" prefHeight="24.0" prefWidth="59.0" />
+                              <Button mnemonicParsing="false" onAction="#handleSetMaxUsers" prefHeight="27.0" prefWidth="62.0" text="Set" />
+                           </children>
+                        </HBox>
                      </children></AnchorPane>
             </content>
           </Tab>
@@ -48,11 +60,22 @@
             <content>
               <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                      <children>
-                        <SplitPane dividerPositions="0.48788927335640137" layoutX="10.0" layoutY="9.0" prefHeight="346.0" prefWidth="690.0" AnchorPane.bottomAnchor="10.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0">
+                        <HBox alignment="CENTER" layoutX="190.0" layoutY="470.0" prefHeight="24.0" prefWidth="364.0" spacing="10.0" AnchorPane.bottomAnchor="14.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
+                           <children>
+                              <Label text="Max Entities on a page:">
+                                 <font>
+                                    <Font size="16.0" />
+                                 </font>
+                              </Label>
+                              <TextField fx:id="textFieldMaxEntities" prefHeight="24.0" prefWidth="53.0" />
+                              <Button mnemonicParsing="false" onAction="#handleSetMaxEntities" prefHeight="24.0" prefWidth="53.0" text="Set" />
+                           </children>
+                        </HBox>
+                        <SplitPane dividerPositions="0.48788927335640137" layoutX="10.0" layoutY="9.0" prefHeight="456.0" prefWidth="675.0" AnchorPane.bottomAnchor="42.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0">
                           <items>
                             <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="160.0" prefWidth="100.0">
                                  <children>
-                                    <TableView fx:id="tableViewFriends" onContextMenuRequested="#contextMenuTableUsers" prefHeight="252.0" prefWidth="238.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                    <TableView fx:id="tableViewFriends" onContextMenuRequested="#contextMenuTableUsers" prefHeight="403.0" prefWidth="325.0" AnchorPane.bottomAnchor="32.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                                       <columns>
                                           <TableColumn prefWidth="75.0" text="Friends">
                                              <columns>
@@ -66,11 +89,12 @@
                                           <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
                                        </columnResizePolicy>
                                     </TableView>
+                                    <Pagination fx:id="friendsPagination" prefHeight="448.0" prefWidth="325.0" AnchorPane.bottomAnchor="-13.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
                                  </children>
                               </AnchorPane>
                             <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="160.0" prefWidth="100.0">
                                  <children>
-                                    <TableView fx:id="tableViewFR" onContextMenuRequested="#contextMenuTableFR" prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                    <TableView fx:id="tableViewFR" onContextMenuRequested="#contextMenuTableFR" prefHeight="413.0" prefWidth="342.0" AnchorPane.bottomAnchor="32.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                                       <columns>
                                           <TableColumn prefWidth="75.0" text="Friend Requests">
                                              <columns>
@@ -83,6 +107,7 @@
                                           <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
                                        </columnResizePolicy>
                                     </TableView>
+                                    <Pagination fx:id="friendRequestsPagination" prefHeight="459.0" prefWidth="343.0" AnchorPane.bottomAnchor="-13.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
                                  </children>
                               </AnchorPane>
                           </items>
