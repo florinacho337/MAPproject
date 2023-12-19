@@ -11,6 +11,7 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.ContextMenuEvent;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import org.w3c.dom.Node;
 import ro.ubbcluj.map.UserApplication;
 import ro.ubbcluj.map.domain.entities.FriendRequest;
 import ro.ubbcluj.map.domain.entities.Prietenie;
@@ -25,6 +26,7 @@ import ro.ubbcluj.map.utils.observer.Observer;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.StreamSupport;
@@ -70,9 +72,9 @@ public class UserController implements Observer<UtilizatorChangeEvent> {
     @FXML
     private final MenuItem menuItemReject = new MenuItem("Reject");
 
-    ObservableList<Utilizator> modelUsers = FXCollections.observableArrayList();
-    ObservableList<FriendRequestDTO> modelFR = FXCollections.observableArrayList();
-    ObservableList<PrietenDTO> modelFriends = FXCollections.observableArrayList();
+    private final ObservableList<Utilizator> modelUsers = FXCollections.observableArrayList();
+    private final ObservableList<FriendRequestDTO> modelFR = FXCollections.observableArrayList();
+    private final ObservableList<PrietenDTO> modelFriends = FXCollections.observableArrayList();
 
     private UsersService usersService;
     private FriendshipsService friendshipsService;
@@ -80,17 +82,24 @@ public class UserController implements Observer<UtilizatorChangeEvent> {
     private int usersPageSize;
     private int entitiesPageSize;
     private Stage stage;
+    private List<Stage> dialogs;
 
     public void setService(UsersService usersService, FriendshipsService friendshipsService, Utilizator utilizator, Stage stage) {
         this.usersService = usersService;
         this.friendshipsService = friendshipsService;
         this.utilizator = utilizator;
         this.stage = stage;
+        this.dialogs = new ArrayList<>();
         usersService.addObserver(this);
         friendshipsService.addObserver(this);
         usersPageSize = 10;
         entitiesPageSize = 10;
         initModel();
+        initStage();
+    }
+
+    private void initStage(){
+        stage.setOnCloseRequest(event -> dialogs.forEach(Stage::close));
     }
 
     @FXML
@@ -157,6 +166,7 @@ public class UserController implements Observer<UtilizatorChangeEvent> {
 
             MessageController controller = loader.getController();
             controller.setService(usersService, dialogStage, utilizator, to);
+            dialogs.add(dialogStage);
 
             dialogStage.show();
         } catch (IOException e) {
@@ -165,6 +175,7 @@ public class UserController implements Observer<UtilizatorChangeEvent> {
     }
 
     public void handleExit(ActionEvent actionEvent) {
+        this.dialogs.forEach(Stage::close);
         this.stage.close();
     }
 
@@ -233,6 +244,17 @@ public class UserController implements Observer<UtilizatorChangeEvent> {
         });
     }
 
+    public void contextMenuTableFriends(ContextMenuEvent contextMenuEvent) {
+        menuItemOpenChat.setOnAction(event -> {
+            Utilizator u2 = tableViewFriends.getSelectionModel().getSelectedItem().getPrieten();
+            try {
+                showChatDialog(u2);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
+
     private void showChatDialog(Utilizator user) throws IOException {
         FXMLLoader loader = new FXMLLoader(UserApplication.class.getResource("chat-view.fxml"));
 
@@ -243,6 +265,7 @@ public class UserController implements Observer<UtilizatorChangeEvent> {
 
         ChatController controller = loader.getController();
         controller.setService(usersService, dialogStage, utilizator, user);
+        dialogs.add(dialogStage);
 
         dialogStage.show();
     }

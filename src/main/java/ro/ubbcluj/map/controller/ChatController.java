@@ -32,11 +32,11 @@ public class ChatController implements Observer<UtilizatorChangeEvent> {
     @FXML
     private final MenuItem menuItemReply = new MenuItem("Reply");
 
-    Stage dialogStage;
-    UsersService usersService;
-    Utilizator u1;
-    Utilizator u2;
-    ObservableList<Message> model = FXCollections.observableArrayList();
+    private Stage dialogStage;
+    private UsersService usersService;
+    private Utilizator u1;
+    private Utilizator u2;
+    private final ObservableList<Message> model = FXCollections.observableArrayList();
 
     public void setService(UsersService usersService, Stage dialogStage, Utilizator u1, Utilizator u2){
         this.usersService = usersService;
@@ -83,7 +83,7 @@ public class ChatController implements Observer<UtilizatorChangeEvent> {
     }
 
     public void handleExit(ActionEvent actionEvent) {
-        dialogStage.close();
+        this.dialogStage.close();
     }
 
     public void setOnKeyPressed(KeyEvent keyEvent) {

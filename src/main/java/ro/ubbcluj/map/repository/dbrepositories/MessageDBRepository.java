@@ -11,22 +11,17 @@ import java.time.LocalDateTime;
 import java.util.*;
 
 public class MessageDBRepository implements Repository<Long, Message> {
-    protected final String url;
-    protected final String username;
-    protected final String password;
+    protected final Connection connection;
     private final MessageValidator validator;
 
-    public MessageDBRepository(String url, String username, String password) {
-        this.url = url;
-        this.username = username;
-        this.password = password;
+    public MessageDBRepository(Connection connection) {
+        this.connection = connection;
         this.validator = new MessageValidator();
     }
 
     @Override
     public Optional<Message> findOne(Long aLong) {
-        try (Connection connection = DriverManager.getConnection(url, username, password);
-             PreparedStatement statement = connection.prepareStatement("""
+        try (PreparedStatement statement = connection.prepareStatement("""
                      select "from", u1.first_name as "first_name_from", u1.last_name as "last_name_from", u1.password as "password_u1",  "to", u2.first_name as "first_name_to", u2.last_name as "last_name_to", u2.password as "password_u2", message, data, reply_to
                      from conversations inner join messages on conversations.id_message = messages.id
                      inner join users u1 on conversations."from" = u1.username
@@ -77,8 +72,7 @@ public class MessageDBRepository implements Repository<Long, Message> {
     public Iterable<Message> findAll() {
         Set<Message> messages = new HashSet<>();
 
-        try (Connection connection = DriverManager.getConnection(url, username, password);
-             PreparedStatement statement = connection.prepareStatement("select id from messages");
+        try (PreparedStatement statement = connection.prepareStatement("select id from messages");
              ResultSet resultSet = statement.executeQuery()
         ) {
 
@@ -97,8 +91,7 @@ public class MessageDBRepository implements Repository<Long, Message> {
     @Override
     public Optional<Message> save(Message entity) {
         validator.validate(entity);
-        try(Connection connection = DriverManager.getConnection(url, username, password);
-            PreparedStatement statement = connection.prepareStatement("""
+        try(PreparedStatement statement = connection.prepareStatement("""
                     insert into messages(message, data, reply_to)
                     values (?, ?, ?)""")
         ){
@@ -110,7 +103,7 @@ public class MessageDBRepository implements Repository<Long, Message> {
                 statement.setInt(3, Math.toIntExact(entity.getReplyTo().getId()));
             int response = statement.executeUpdate();
             if(response != 0) {
-                insertConversations(entity, connection);
+                insertConversations(entity);
                 return Optional.empty();
             }else
                 return Optional.of(entity);
@@ -119,19 +112,19 @@ public class MessageDBRepository implements Repository<Long, Message> {
         }
     }
 
-    private static void insertConversations(Message entity, Connection connection) {
+    private void insertConversations(Message entity) {
         try(PreparedStatement selectMessage = connection.prepareStatement("select max(id) as \"id\" from messages");
             ResultSet resultSet = selectMessage.executeQuery()
         ){
             if(resultSet.next()) {
-                entity.getTo().forEach(utilizator -> insertConversation(entity, connection, utilizator, resultSet));
+                entity.getTo().forEach(utilizator -> insertConversation(entity, utilizator, resultSet));
             }
         } catch (SQLException e){
             throw new RuntimeException(e);
         }
     }
 
-    private static void insertConversation(Message entity, Connection connection, Utilizator utilizator, ResultSet resultSet) {
+    private void insertConversation(Message entity, Utilizator utilizator, ResultSet resultSet) {
         try (PreparedStatement adauga_conversatie = connection.prepareStatement("insert into conversations(id_message, \"from\", \"to\")\n" +
                 "values (?, ?, ?)")) {
             adauga_conversatie.setInt(1, Math.toIntExact(resultSet.getLong("id")));

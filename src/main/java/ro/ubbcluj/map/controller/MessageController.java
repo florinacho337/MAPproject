@@ -11,14 +11,14 @@ import ro.ubbcluj.map.service.UsersService;
 
 import java.util.List;
 
-public class MessageController {
+public class MessageController{
     @FXML
     private TextArea textAreaMessage;
 
     private UsersService usersService;
     private Stage dialogStage;
     private Utilizator from;
-    List<Utilizator> to;
+    private List<Utilizator> to;
     public void setService(UsersService usersService, Stage dialogStage, Utilizator from, List<Utilizator> to) {
         this.from = from;
         this.dialogStage = dialogStage;

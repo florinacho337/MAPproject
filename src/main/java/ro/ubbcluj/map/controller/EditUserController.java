@@ -16,10 +16,10 @@ public class EditUserController {
     @FXML
     private TextField textFieldId;
 
-    Stage dialogStage;
+    private Stage dialogStage;
     private UsersService usersService;
-    Utilizator user;
-    EditType type;
+    private Utilizator user;
+    private EditType type;
 
 
     @FXML
@@ -66,7 +66,7 @@ public class EditUserController {
         } catch (ValidationException e){
             MessageAlert.showErrorMessage(null, e.getMessage());
         }
-        dialogStage.close();
+        this.dialogStage.close();
     }
 
     private void saveUser(Utilizator u) {
@@ -79,9 +79,9 @@ public class EditUserController {
         } catch(ValidationException e){
             MessageAlert.showErrorMessage(null, e.getMessage());
         }
-        dialogStage.close();
+        this.dialogStage.close();
     }
 
     @FXML
-    public void handleCancel(){dialogStage.close();}
+    public void handleCancel(){this.dialogStage.close();}
 }

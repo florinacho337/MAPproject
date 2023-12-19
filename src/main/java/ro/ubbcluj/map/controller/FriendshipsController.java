@@ -24,18 +24,18 @@ public class FriendshipsController implements Observer<UtilizatorChangeEvent> {
     @FXML
     private TableColumn<PrietenDTO, String> tableColumnFirstName;
     @FXML
-    public TableColumn<PrietenDTO, String> tableColumnLastName;
+    private TableColumn<PrietenDTO, String> tableColumnLastName;
     @FXML
-    public TableColumn<PrietenDTO, LocalDateTime> tableColumnFriendsFrom;
+    private TableColumn<PrietenDTO, LocalDateTime> tableColumnFriendsFrom;
     @FXML
     private TableColumn<PrietenDTO, Long> tableColumnId;
     @FXML
     private TableView<PrietenDTO> tableView;
-    Stage dialogStage;
+    private Stage dialogStage;
 
     private FriendshipsService friendshipsService;
-    Utilizator u;
-    ObservableList<PrietenDTO> model = FXCollections.observableArrayList();
+    private Utilizator u;
+    private final ObservableList<PrietenDTO> model = FXCollections.observableArrayList();
 
     @FXML
     private void initialize(){
@@ -61,7 +61,7 @@ public class FriendshipsController implements Observer<UtilizatorChangeEvent> {
         model.setAll(prieteniiUser);
     }
     public void handleExit(ActionEvent actionEvent) {
-        dialogStage.close();
+        this.dialogStage.close();
     }
 
     @Override

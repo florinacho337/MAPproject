@@ -13,21 +13,16 @@ import java.util.Set;
 
 public class UserDBRepository implements Repository<String, Utilizator> {
 
-    protected final String url;
-    protected final String username;
-    protected final String password;
+    protected final Connection connection;
     private final Validator<Utilizator> validator;
 
-    public UserDBRepository(String url, String username, String password) {
-        this.url = url;
-        this.username = username;
-        this.password = password;
+    public UserDBRepository(Connection connection) {
+        this.connection = connection;
         validator = new UtilizatorValidator();
     }
 
     private void setFriends(Utilizator utilizator){
-        try(Connection connection = DriverManager.getConnection(url, username, password);
-            PreparedStatement statement = connection.prepareStatement("select * from friendships "+
+        try(PreparedStatement statement = connection.prepareStatement("select * from friendships "+
                     "where username1 = ? or username2 = ?")
         ){
             statement.setString(1, utilizator.getId());
@@ -58,8 +53,7 @@ public class UserDBRepository implements Repository<String, Utilizator> {
 
     @Override
     public Optional<Utilizator> findOne(String longID) {
-        try(Connection connection = DriverManager.getConnection(url, username, password);
-            PreparedStatement statement = connection.prepareStatement("select * from users " +
+        try(PreparedStatement statement = connection.prepareStatement("select * from users " +
                     "where username = ?")
 
         ) {
@@ -85,8 +79,7 @@ public class UserDBRepository implements Repository<String, Utilizator> {
     public  Iterable<Utilizator> findAll() {
         Set<Utilizator> users = new HashSet<>();
 
-        try (Connection connection = DriverManager.getConnection(url, username, password);
-             PreparedStatement statement = connection.prepareStatement("select * from users");
+        try (PreparedStatement statement = connection.prepareStatement("select * from users");
              ResultSet resultSet = statement.executeQuery()
         ) {
 
@@ -106,8 +99,7 @@ public class UserDBRepository implements Repository<String, Utilizator> {
     @Override
     public Optional<Utilizator> save(Utilizator entity) {
         validator.validate(entity);
-        try(Connection connection = DriverManager.getConnection(url, username, password);
-            PreparedStatement statement = connection.prepareStatement("insert into users(first_name, last_name, username, password) " +
+        try(PreparedStatement statement = connection.prepareStatement("insert into users(first_name, last_name, username, password) " +
                     "values (?, ?, ?, ?)")
         ){
             statement.setString(1, entity.getFirstName());
@@ -126,8 +118,7 @@ public class UserDBRepository implements Repository<String, Utilizator> {
 
     @Override
     public Optional<Utilizator> delete(String ID) {
-        try(Connection connection = DriverManager.getConnection(url, username, password);
-            PreparedStatement statement = connection.prepareStatement("delete from users where username = ?")
+        try(PreparedStatement statement = connection.prepareStatement("delete from users where username = ?")
         ){
             statement.setString(1, ID);
             Optional<Utilizator> user = findOne(ID);
@@ -143,8 +134,7 @@ public class UserDBRepository implements Repository<String, Utilizator> {
 
     @Override
     public Optional<Utilizator> update(Utilizator entity) {
-        try(Connection connection = DriverManager.getConnection(url, username, password);
-            PreparedStatement statement = connection.prepareStatement("update users set first_name = ?, last_name = ?, password = ? where username = ?")
+        try(PreparedStatement statement = connection.prepareStatement("update users set first_name = ?, last_name = ?, password = ? where username = ?")
         ){
             statement.setString(1, entity.getFirstName());
             statement.setString(2, entity.getLastName());

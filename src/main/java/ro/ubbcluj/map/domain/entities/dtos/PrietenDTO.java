@@ -9,21 +9,28 @@ import java.util.Objects;
 public class PrietenDTO {
     Prietenie prietenie;
     Utilizator user;
+    Utilizator prieten;
     String id;
     String firstName;
     String lastName;
     String friendsFrom;
 
 
+    public Utilizator getPrieten() {
+        return prieten;
+    }
+
     public PrietenDTO(Prietenie prietenie, Utilizator utilizator) {
         this.prietenie = prietenie;
         this.user = utilizator;
         if(Objects.equals(utilizator.getId(), prietenie.getU1().getId())){
             id = prietenie.getU2().getId();
+            prieten = prietenie.getU2();
             firstName = prietenie.getU2().getFirstName();
             lastName = prietenie.getU2().getLastName();
         } else{
             id = prietenie.getU1().getId();
+            prieten = prietenie.getU1();
             firstName = prietenie.getU1().getFirstName();
             lastName = prietenie.getU1().getLastName();
         }

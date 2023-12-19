@@ -21,16 +21,17 @@ import ro.ubbcluj.map.utils.exceptions.DuplicateException;
 import ro.ubbcluj.map.utils.observer.Observer;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.StreamSupport;
 
 public class AdminController implements Observer<UtilizatorChangeEvent> {
 
-    UsersService usersService;
-    FriendshipsService friendshipsService;
-    ObservableList<Utilizator> modelUsers = FXCollections.observableArrayList();
-    ObservableList<FriendRequestDTO> modelFR = FXCollections.observableArrayList();
+    private UsersService usersService;
+    private FriendshipsService friendshipsService;
+    private final ObservableList<Utilizator> modelUsers = FXCollections.observableArrayList();
+    private final ObservableList<FriendRequestDTO> modelFR = FXCollections.observableArrayList();
     @FXML
     private TableView<Utilizator> tableViewUsers;
     @FXML
@@ -52,16 +53,22 @@ public class AdminController implements Observer<UtilizatorChangeEvent> {
     private TextField textFieldSetUser;
 
     private Stage stage;
+    private List<Stage> dialogs;
 
     public void setUsersService(UsersService usersService, FriendshipsService friendshipsService, Stage stage){
         this.friendshipsService = friendshipsService;
         this.usersService = usersService;
         this.stage = stage;
+        dialogs = new ArrayList<>();
         usersService.addObserver(this);
         friendshipsService.addObserver(this);
         initModel();
+        initStage();
     }
 
+    private void initStage(){
+        stage.setOnCloseRequest(event -> dialogs.forEach(Stage::close));
+    }
     @FXML
     public void initialize() {
         tableColumnId.setCellValueFactory(new PropertyValueFactory<>("username"));
@@ -117,6 +124,7 @@ public class AdminController implements Observer<UtilizatorChangeEvent> {
 
             EditUserController controller = loader.getController();
             controller.setService(usersService, dialogStage, user);
+            dialogs.add(dialogStage);
 
             dialogStage.show();
         } catch (IOException e){
@@ -134,7 +142,8 @@ public class AdminController implements Observer<UtilizatorChangeEvent> {
     }
 
     public void handleExit(ActionEvent actionEvent) {
-        stage.close();
+        this.dialogs.forEach(Stage::close);
+        this.stage.close();
     }
 
     public void handleSendFR(ActionEvent actionEvent) {
@@ -220,6 +229,7 @@ public class AdminController implements Observer<UtilizatorChangeEvent> {
 
             FriendshipsController controller = loader.getController();
             controller.setService(friendshipsService, dialogStage, user);
+            dialogs.add(dialogStage);
 
             dialogStage.show();
         } catch (IOException e){
@@ -248,6 +258,7 @@ public class AdminController implements Observer<UtilizatorChangeEvent> {
 
             MessageController controller = loader.getController();
             controller.setService(usersService, dialogStage, from, to);
+            dialogs.add(dialogStage);
 
             dialogStage.show();
         } catch (IOException e){
@@ -279,6 +290,7 @@ public class AdminController implements Observer<UtilizatorChangeEvent> {
 
             ChatController controller = loader.getController();
             controller.setService(usersService, dialogStage, u1, u2);
+            dialogs.add(dialogStage);
 
             dialogStage.show();
         } catch (IOException e){

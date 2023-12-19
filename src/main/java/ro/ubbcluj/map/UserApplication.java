@@ -5,31 +5,28 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 import ro.ubbcluj.map.controller.LoginRegisterController;
-import ro.ubbcluj.map.repository.dbrepositories.FriendRequestDBRepo;
-import ro.ubbcluj.map.repository.dbrepositories.FriendshipDBRepository;
 import ro.ubbcluj.map.repository.dbrepositories.MessageDBRepository;
-import ro.ubbcluj.map.repository.dbrepositories.UserDBRepository;
 import ro.ubbcluj.map.repository.pagingrepositories.FriendRequestDBPagingRepository;
 import ro.ubbcluj.map.repository.pagingrepositories.FriendshipDBPagingRepository;
 import ro.ubbcluj.map.repository.pagingrepositories.UserDBPagingRepository;
 import ro.ubbcluj.map.service.FriendshipsService;
 import ro.ubbcluj.map.service.UsersService;
+import ro.ubbcluj.map.utils.DBConnection;
 
 import java.io.IOException;
+import java.util.ArrayList;
 
 public class UserApplication extends Application {
     private UsersService usersService;
     private FriendshipsService friendshipsService;
+    private final DBConnection dbConnection = new DBConnection();
     @Override
     public void start(Stage primaryStage) throws Exception {
-        String url = "jdbc:postgresql://localhost:5432/socialnetwork";
-        String username = "postgres";
-        String password = "postgres";
-        UserDBPagingRepository repoUsers = new UserDBPagingRepository(url, username, password);
-        FriendRequestDBPagingRepository friendRequestDBRepo = new FriendRequestDBPagingRepository(url, username, password);
-        FriendshipDBPagingRepository friendshipDBRepository = new FriendshipDBPagingRepository(url, username, password);
+        UserDBPagingRepository repoUsers = new UserDBPagingRepository(dbConnection.getConnection());
+        FriendRequestDBPagingRepository friendRequestDBRepo = new FriendRequestDBPagingRepository(dbConnection.getConnection());
+        FriendshipDBPagingRepository friendshipDBRepository = new FriendshipDBPagingRepository(dbConnection.getConnection());
         friendshipsService = new FriendshipsService(friendshipDBRepository, repoUsers, friendRequestDBRepo);
-        MessageDBRepository repoMessages = new MessageDBRepository(url,username, password);
+        MessageDBRepository repoMessages = new MessageDBRepository(dbConnection.getConnection());
         usersService = new UsersService(repoUsers, repoMessages);
 
         initView(primaryStage);
@@ -43,7 +40,7 @@ public class UserApplication extends Application {
         primaryStage.setTitle("Login");
 
         LoginRegisterController loginRegisterController = usersLoader.getController();
-        loginRegisterController.setUsersService(usersService, friendshipsService, primaryStage);
+        loginRegisterController.setUsersService(usersService, friendshipsService, primaryStage, dbConnection, new ArrayList<>());
 
     }
 

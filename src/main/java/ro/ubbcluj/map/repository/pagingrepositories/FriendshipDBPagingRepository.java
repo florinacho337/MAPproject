@@ -13,16 +13,15 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class FriendshipDBPagingRepository extends FriendshipDBRepository implements PagingRepository<Tuple<String, String>, Prietenie> {
-    public FriendshipDBPagingRepository(String url, String username, String password) {
-        super(url, username, password);
+    public FriendshipDBPagingRepository(Connection connection) {
+        super(connection);
     }
 
     @Override
     public Page<Prietenie> findAll(Pageable pageable, String id) {
         Set<Prietenie> prietenii = new HashSet<>();
 
-        try (Connection connection = DriverManager.getConnection(url, username, password);
-             PreparedStatement statement = connection.prepareStatement("""
+        try (PreparedStatement statement = connection.prepareStatement("""
                      select username1, username2, "friendsFrom", u1.first_name as "firstNameU1", u1.last_name as "lastNameU1", u1.password as "passwordU1", u2.first_name as "firstNameU2", u2.last_name as "lastNameU2", u2.password as "passwordU2" from friendships f
                                           inner join users u1 on u1.username = f.username1
                                           inner join users u2 on u2.username = f.username2

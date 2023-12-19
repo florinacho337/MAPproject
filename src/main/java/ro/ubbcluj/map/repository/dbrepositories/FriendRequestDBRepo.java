@@ -5,28 +5,26 @@ import ro.ubbcluj.map.domain.entities.Utilizator;
 import ro.ubbcluj.map.domain.validators.FriendRequestValidator;
 import ro.ubbcluj.map.repository.Repository;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
 public class FriendRequestDBRepo implements Repository<Long, FriendRequest> {
-    protected final String url;
-    protected final String username;
-    protected final String password;
+    protected final Connection connection;
     private final FriendRequestValidator validator;
 
-    public FriendRequestDBRepo(String url, String username, String password) {
-        this.url = url;
-        this.username = username;
-        this.password = password;
+    public FriendRequestDBRepo(Connection connection) {
+        this.connection = connection;
         this.validator = new FriendRequestValidator();
     }
 
     protected void setFriends(Utilizator utilizator){
-        try(Connection connection = DriverManager.getConnection(url, username, password);
-            PreparedStatement statement = connection.prepareStatement("select * from friendships "+
+        try(PreparedStatement statement = connection.prepareStatement("select * from friendships "+
                     "where username1 = ? or username2 = ?")
         ){
             statement.setString(1, utilizator.getId());
@@ -56,8 +54,7 @@ public class FriendRequestDBRepo implements Repository<Long, FriendRequest> {
     }
     @Override
     public Optional<FriendRequest> findOne(Long aLong) {
-        try(Connection connection = DriverManager.getConnection(url, username, password);
-            PreparedStatement statement = connection.prepareStatement("""
+        try(PreparedStatement statement = connection.prepareStatement("""
                      select "from", "to", status, u1.first_name as "firstNameFrom", u1.last_name as "lastNameFrom", u1.password as "passwordU1", u2.first_name as "firstNameTo", u2.last_name as "lastNameTo", u2.password as "passwordU2" from friend_requests fr
                      inner join users u1 on u1.username = fr.from
                      inner join users u2 on u2.username = fr.to
@@ -96,8 +93,7 @@ public class FriendRequestDBRepo implements Repository<Long, FriendRequest> {
     public Iterable<FriendRequest> findAll() {
         Set<FriendRequest> friendRequests = new HashSet<>();
 
-        try (Connection connection = DriverManager.getConnection(url, username, password);
-             PreparedStatement statement = connection.prepareStatement("""
+        try (PreparedStatement statement = connection.prepareStatement("""
                      select fr.id, "from", "to", status, u1.first_name as "firstNameFrom", u1.last_name as "lastNameFrom", u1.password as "passwordFrom", u2.first_name as "firstNameTo", u2.last_name as "lastNameTo", u2.password as "passwordTo" from friend_requests fr
                      inner join users u1 on u1.username = fr.from
                      inner join users u2 on u2.username = fr.to
@@ -141,8 +137,7 @@ public class FriendRequestDBRepo implements Repository<Long, FriendRequest> {
     @Override
     public Optional<FriendRequest> save(FriendRequest entity) {
         validator.validate(entity);
-        try(Connection connection = DriverManager.getConnection(url, username, password);
-            PreparedStatement statement = connection.prepareStatement("insert into friend_requests(\"from\", \"to\") " +
+        try(PreparedStatement statement = connection.prepareStatement("insert into friend_requests(\"from\", \"to\") " +
                     "values (?, ?)")
         ){
             statement.setString(1, entity.getFrom().getId());
@@ -159,8 +154,7 @@ public class FriendRequestDBRepo implements Repository<Long, FriendRequest> {
 
     @Override
     public Optional<FriendRequest> delete(Long aLong) {
-        try(Connection connection = DriverManager.getConnection(url, username, password);
-            PreparedStatement statement = connection.prepareStatement("delete from friend_requests where id = ?")
+        try(PreparedStatement statement = connection.prepareStatement("delete from friend_requests where id = ?")
         ){
             statement.setInt(1, Math.toIntExact(aLong));
             Optional<FriendRequest> friendRequest = findOne(aLong);
@@ -176,8 +170,7 @@ public class FriendRequestDBRepo implements Repository<Long, FriendRequest> {
 
     @Override
     public Optional<FriendRequest> update(FriendRequest entity) {
-        try(Connection connection = DriverManager.getConnection(url, username, password);
-            PreparedStatement statement = connection.prepareStatement("update friend_requests set status = ? where id = ?")
+        try(PreparedStatement statement = connection.prepareStatement("update friend_requests set status = ? where id = ?")
         ){
             statement.setString(1, entity.getStatus());
             statement.setInt(2, Math.toIntExact(entity.getId()));

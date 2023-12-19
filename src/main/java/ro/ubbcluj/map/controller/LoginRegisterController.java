@@ -15,13 +15,15 @@ import ro.ubbcluj.map.UserApplication;
 import ro.ubbcluj.map.domain.entities.Utilizator;
 import ro.ubbcluj.map.service.FriendshipsService;
 import ro.ubbcluj.map.service.UsersService;
+import ro.ubbcluj.map.utils.DBConnection;
 import ro.ubbcluj.map.utils.PasswordEncoder;
 
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
+import java.util.List;
 import java.util.Objects;
 
-public class LoginRegisterController {
+public class LoginRegisterController{
 
     @FXML
     private PasswordField passwordFieldLogin;
@@ -38,11 +40,27 @@ public class LoginRegisterController {
     private UsersService usersService;
     private FriendshipsService friendshipsService;
     private Stage stage;
+    private DBConnection dbConnection;
+    private List<Stage> dialogs;
 
-    public void setUsersService(UsersService usersService, FriendshipsService friendshipsService, Stage stage){
+    public void setUsersService(UsersService usersService, FriendshipsService friendshipsService, Stage stage, DBConnection dbConnection, List<Stage> dialogs){
         this.friendshipsService = friendshipsService;
         this.usersService = usersService;
         this.stage = stage;
+        this.dbConnection = dbConnection;
+        this.dialogs = dialogs;
+        initStage();
+    }
+
+    private void initStage(){
+        stage.setOnCloseRequest(event -> {
+            dialogs.forEach(Stage::close);
+            try {
+                dbConnection.close();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
     }
 
     public void changeToRegister(MouseEvent mouseEvent) throws IOException {
@@ -52,7 +70,7 @@ public class LoginRegisterController {
         stage.setTitle("Register");
 
         LoginRegisterController loginRegisterController = registerLoader.getController();
-        loginRegisterController.setUsersService(usersService, friendshipsService, stage);
+        loginRegisterController.setUsersService(usersService, friendshipsService, stage, dbConnection, dialogs);
 
         stage.show();
     }
@@ -64,7 +82,7 @@ public class LoginRegisterController {
         stage.setTitle("Login");
 
         LoginRegisterController loginRegisterController = loginLoader.getController();
-        loginRegisterController.setUsersService(usersService, friendshipsService, stage);
+        loginRegisterController.setUsersService(usersService, friendshipsService, stage, dbConnection, dialogs);
 
         stage.show();
     }
@@ -92,6 +110,7 @@ public class LoginRegisterController {
 
         AdminController adminController = usersLoader.getController();
         adminController.setUsersService(usersService, friendshipsService, adminStage);
+        dialogs.add(adminStage);
 
         adminStage.show();
     }
@@ -105,6 +124,7 @@ public class LoginRegisterController {
 
         UserController userController = usersLoader.getController();
         userController.setService(usersService, friendshipsService, utilizator, userStage);
+        dialogs.add(userStage);
 
         userStage.show();
     }

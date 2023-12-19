@@ -4,15 +4,15 @@ import ro.ubbcluj.map.domain.entities.FriendRequest;
 import ro.ubbcluj.map.domain.entities.Prietenie;
 import ro.ubbcluj.map.domain.entities.Tuple;
 import ro.ubbcluj.map.domain.entities.Utilizator;
-import ro.ubbcluj.map.domain.validators.ValidationException;
 import ro.ubbcluj.map.repository.dbrepositories.MessageDBRepository;
 import ro.ubbcluj.map.repository.pagingrepositories.FriendRequestDBPagingRepository;
 import ro.ubbcluj.map.repository.pagingrepositories.FriendshipDBPagingRepository;
 import ro.ubbcluj.map.repository.pagingrepositories.UserDBPagingRepository;
 import ro.ubbcluj.map.service.FriendshipsService;
 import ro.ubbcluj.map.service.UsersService;
-import ro.ubbcluj.map.utils.exceptions.DuplicateException;
+import ro.ubbcluj.map.utils.DBConnection;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -22,12 +22,18 @@ import java.util.stream.StreamSupport;
 public class Console {
     private final FriendshipsService friendshipsService;
     private final UsersService usersService;
-    private static final Console instance = new Console();
+    private static final Console instance;
+    private final DBConnection dbConnection = new DBConnection();
 
-    private Console() {
-        String url = "jdbc:postgresql://localhost:5432/socialnetwork";
-        String username = "postgres";
-        String password = "postgres";
+    static {
+        try {
+            instance = new Console();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private Console() throws SQLException {
 //        UtilizatorValidator validatorUser = new UtilizatorValidator();
 //        PrietenieValidator validatorFriendship = new PrietenieValidator();
 //        FriendRequestValidator friendRequestValidator = new FriendRequestValidator();
@@ -36,10 +42,10 @@ public class Console {
 //        InMemoryRepository<Tuple<Long, Long>, Prietenie> repoFriendships = new InMemoryRepository<>(validatorFriendship);
 //        InMemoryRepository<Long, FriendRequest> repoFriendRequest = new InMemoryRepository<>(friendRequestValidator);
 //        InMemoryRepository<Long, Message> repoMessages = new InMemoryRepository<>(messageValidator);
-        UserDBPagingRepository repoUsers = new UserDBPagingRepository(url, username, password);
-        FriendshipDBPagingRepository repoFriendships = new FriendshipDBPagingRepository(url, username, password);
-        FriendRequestDBPagingRepository repoFriendRequest = new FriendRequestDBPagingRepository(url, username, password);
-        MessageDBRepository repoMessages = new MessageDBRepository(url, username, password);
+        UserDBPagingRepository repoUsers = new UserDBPagingRepository(dbConnection.getConnection());
+        FriendshipDBPagingRepository repoFriendships = new FriendshipDBPagingRepository(dbConnection.getConnection());
+        FriendRequestDBPagingRepository repoFriendRequest = new FriendRequestDBPagingRepository(dbConnection.getConnection());
+        MessageDBRepository repoMessages = new MessageDBRepository(dbConnection.getConnection());
         usersService = new UsersService(repoUsers, repoMessages);
         friendshipsService = new FriendshipsService(repoFriendships, repoUsers, repoFriendRequest);
     }
@@ -92,6 +98,7 @@ public class Console {
             try {
                 switch (parts[0]) {
                     case "exit":
+                        dbConnection.close();
                         return;
                     case "meniu":
                         Meniu();
@@ -141,7 +148,7 @@ public class Console {
                     default:
                         System.out.println("Comanda invalida!");
                 }
-            } catch (IllegalArgumentException | ValidationException | DuplicateException e) {
+            } catch (Exception e) {
                 System.out.println(e.getMessage());
             }
         }

@@ -6,32 +6,29 @@ import ro.ubbcluj.map.domain.entities.Utilizator;
 import ro.ubbcluj.map.domain.validators.PrietenieValidator;
 import ro.ubbcluj.map.domain.validators.Validator;
 import ro.ubbcluj.map.repository.Repository;
-import ro.ubbcluj.map.repository.pagingrepositories.FriendshipDBPagingRepository;
 import ro.ubbcluj.map.utils.Constants;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
 public class FriendshipDBRepository implements Repository<Tuple<String, String>, Prietenie> {
 
-    protected final String url;
-    protected final String username;
-    protected final String password;
+    protected final Connection connection;
     private final Validator<Prietenie> validator;
 
-    public FriendshipDBRepository(String url, String username, String password) {
-        this.url = url;
-        this.username = username;
-        this.password = password;
+    public FriendshipDBRepository(Connection connection) {
+        this.connection = connection;
         validator = new PrietenieValidator();
     }
 
     @Override
     public Optional<Prietenie> findOne(Tuple<String, String> ID) {
-        try(Connection connection = DriverManager.getConnection(url, username, password);
-            PreparedStatement statement = connection.prepareStatement("""
+        try(PreparedStatement statement = connection.prepareStatement("""
                     select "friendsFrom", u1.first_name as "firstNameU1", u1.last_name as "lastNameU1", u1.password as "passwordU1", u2.first_name as "firstNameU2", u2.last_name as "lastNameU2", u2.password as "passwordU2"\s
                     FROM friendships f INNER JOIN users u1 on u1.username = f.username1\s
                     INNER JOIN users u2 on u2.username = f.username2 where f.username1 = ? and f.username2 = ?""")
@@ -65,8 +62,7 @@ public class FriendshipDBRepository implements Repository<Tuple<String, String>,
     public Iterable<Prietenie> findAll() {
         Set<Prietenie> prietenii = new HashSet<>();
 
-        try (Connection connection = DriverManager.getConnection(url, username, password);
-             PreparedStatement statement = connection.prepareStatement("""
+        try (PreparedStatement statement = connection.prepareStatement("""
                      select username1, username2, "friendsFrom", u1.first_name as "firstNameU1", u1.last_name as "lastNameU1", u1.password as "passwordU1", u2.first_name as "firstNameU2", u2.last_name as "lastNameU2", u2.password as "passwordU2" from friendships f
                      inner join users u1 on u1.username = f.username1
                      inner join users u2 on u2.username = f.username2""");
@@ -84,8 +80,7 @@ public class FriendshipDBRepository implements Repository<Tuple<String, String>,
     @Override
     public Optional<Prietenie> save(Prietenie entity) {
         validator.validate(entity);
-        try(Connection connection = DriverManager.getConnection(url, username, password);
-            PreparedStatement statement = connection.prepareStatement("insert into friendships " +
+        try(PreparedStatement statement = connection.prepareStatement("insert into friendships " +
                     "values (?, ?, ?)")
         ){
             statement.setString(1, entity.getId().getLeft());
@@ -103,8 +98,7 @@ public class FriendshipDBRepository implements Repository<Tuple<String, String>,
 
     @Override
     public Optional<Prietenie> delete(Tuple<String, String> ID) {
-        try(Connection connection = DriverManager.getConnection(url, username, password);
-            PreparedStatement statement = connection.prepareStatement("delete from friendships where username1 = ? and username2 = ?")
+        try(PreparedStatement statement = connection.prepareStatement("delete from friendships where username1 = ? and username2 = ?")
         ){
             statement.setString(1, ID.getLeft());
             statement.setString(2, ID.getRight());
