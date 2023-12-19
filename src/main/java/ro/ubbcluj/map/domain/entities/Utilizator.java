@@ -5,14 +5,42 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class Utilizator extends Entity<Long> {
+public class Utilizator extends Entity<String> {
     private String firstName;
     private String lastName;
+    private String username;
+    private String password;
     private final List<Utilizator> friends;
 
-    public Utilizator(String firstName, String lastName) {
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public Utilizator(String firstName, String lastName, String username, String password) {
         this.firstName = firstName;
         this.lastName = lastName;
+        this.username = username;
+        this.password = password;
         friends = new ArrayList<>();
     }
 

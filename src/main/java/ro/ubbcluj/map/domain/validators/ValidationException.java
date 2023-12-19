@@ -1,4 +1,4 @@
-package ro.ubbcluj.map.utils.exceptions;
+package ro.ubbcluj.map.domain.validators;
 
 public class ValidationException extends RuntimeException {
     public ValidationException() {

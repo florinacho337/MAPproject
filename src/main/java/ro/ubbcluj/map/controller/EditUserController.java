@@ -5,8 +5,8 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 import ro.ubbcluj.map.domain.entities.Utilizator;
+import ro.ubbcluj.map.domain.validators.ValidationException;
 import ro.ubbcluj.map.service.UsersService;
-import ro.ubbcluj.map.utils.exceptions.ValidationException;
 
 public class EditUserController {
     @FXML
@@ -31,27 +31,27 @@ public class EditUserController {
         type = EditType.SAVE;
         textFieldId.setEditable(false);
         if(u != null){
-            setFields(u);
+            setFields();
             type = EditType.UPDATE;
         }
     }
 
-    private void setFields(Utilizator u) {
-        textFieldId.setText(String.valueOf(u.getId()));
-        textFieldFirstName.setText(u.getFirstName());
-        textFieldLastName.setText(u.getLastName());
+    private void setFields() {
+        textFieldId.setText(user.getId());
+        textFieldFirstName.setText(user.getFirstName());
+        textFieldLastName.setText(user.getLastName());
     }
 
     @FXML
     public void handleSave(){
+        String id = textFieldId.getText();
         String firstName = textFieldFirstName.getText();
         String lastName = textFieldLastName.getText();
-        Long id = Long.valueOf(textFieldId.getText());
-        Utilizator u = new Utilizator(firstName, lastName);
+        Utilizator u = new Utilizator(firstName, lastName, id, user.getPassword());
+        u.setId(id);
         if(type == EditType.SAVE)
             saveUser(u);
         else if (type == EditType.UPDATE) {
-            u.setId(id);
             updateUser(u);
         }
     }

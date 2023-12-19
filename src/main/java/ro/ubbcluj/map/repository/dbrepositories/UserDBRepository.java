@@ -7,14 +7,15 @@ import ro.ubbcluj.map.repository.Repository;
 
 import java.sql.*;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
-public class UserDBRepository implements Repository<Long, Utilizator> {
+public class UserDBRepository implements Repository<String, Utilizator> {
 
-    private final String url;
-    private final String username;
-    private final String password;
+    protected final String url;
+    protected final String username;
+    protected final String password;
     private final Validator<Utilizator> validator;
 
     public UserDBRepository(String url, String username, String password) {
@@ -27,24 +28,25 @@ public class UserDBRepository implements Repository<Long, Utilizator> {
     private void setFriends(Utilizator utilizator){
         try(Connection connection = DriverManager.getConnection(url, username, password);
             PreparedStatement statement = connection.prepareStatement("select * from friendships "+
-                    "where id_u1 = ? or id_u2 = ?")
+                    "where username1 = ? or username2 = ?")
         ){
-            statement.setInt(1, Math.toIntExact(utilizator.getId()));
-            statement.setInt(2, Math.toIntExact(utilizator.getId()));
+            statement.setString(1, utilizator.getId());
+            statement.setString(2, utilizator.getId());
             ResultSet resultSet = statement.executeQuery();
             while (resultSet.next()){
                 PreparedStatement getFriend = connection.prepareStatement("select * from users "+
-                        "where id = ?");
-                if(resultSet.getInt("id_u1") == utilizator.getId())
-                    getFriend.setInt(1, resultSet.getInt("id_u2"));
+                        "where username = ?");
+                if(Objects.equals(resultSet.getString("username1"), utilizator.getId()))
+                    getFriend.setString(1, resultSet.getString("username2"));
                 else
-                    getFriend.setInt(1, resultSet.getInt("id_u1"));
+                    getFriend.setString(1, resultSet.getString("username1"));
                 ResultSet friend = getFriend.executeQuery();
                 if(friend.next()){
                     String firstName = friend.getString("first_name");
                     String lastName = friend.getString("last_name");
-                    Long id = (long) friend.getInt("id");
-                    Utilizator prieten = new Utilizator(firstName, lastName);
+                    String id = friend.getString("username");
+                    String password = friend.getString("password");
+                    Utilizator prieten = new Utilizator(firstName, lastName, id, password);
                     prieten.setId(id);
                     utilizator.addFriend(prieten);
                 }
@@ -55,18 +57,19 @@ public class UserDBRepository implements Repository<Long, Utilizator> {
     }
 
     @Override
-    public Optional<Utilizator> findOne(Long longID) {
+    public Optional<Utilizator> findOne(String longID) {
         try(Connection connection = DriverManager.getConnection(url, username, password);
             PreparedStatement statement = connection.prepareStatement("select * from users " +
-                    "where id = ?")
+                    "where username = ?")
 
         ) {
-            statement.setInt(1, Math.toIntExact(longID));
+            statement.setString(1, longID);
             ResultSet resultSet = statement.executeQuery();
             if(resultSet.next()) {
                 String firstName = resultSet.getString("first_name");
                 String lastName = resultSet.getString("last_name");
-                Utilizator u = new Utilizator(firstName,lastName);
+                String password = resultSet.getString("password");
+                Utilizator u = new Utilizator(firstName,lastName, longID, password);
                 u.setId(longID);
                 setFriends(u);
                 return Optional.of(u);
@@ -79,7 +82,7 @@ public class UserDBRepository implements Repository<Long, Utilizator> {
     }
 
     @Override
-    public Iterable<Utilizator> findAll() {
+    public  Iterable<Utilizator> findAll() {
         Set<Utilizator> users = new HashSet<>();
 
         try (Connection connection = DriverManager.getConnection(url, username, password);
@@ -89,11 +92,7 @@ public class UserDBRepository implements Repository<Long, Utilizator> {
 
             while (resultSet.next())
             {
-                Long id= resultSet.getLong("id");
-                String firstName=resultSet.getString("first_name");
-                String lastName=resultSet.getString("last_name");
-                Utilizator user=new Utilizator(firstName,lastName);
-                user.setId(id);
+                Utilizator user = extractUser(resultSet);
                 setFriends(user);
                 users.add(user);
             }
@@ -108,11 +107,13 @@ public class UserDBRepository implements Repository<Long, Utilizator> {
     public Optional<Utilizator> save(Utilizator entity) {
         validator.validate(entity);
         try(Connection connection = DriverManager.getConnection(url, username, password);
-            PreparedStatement statement = connection.prepareStatement("insert into users(first_name, last_name) " +
-                    "values (?, ?)")
+            PreparedStatement statement = connection.prepareStatement("insert into users(first_name, last_name, username, password) " +
+                    "values (?, ?, ?, ?)")
         ){
             statement.setString(1, entity.getFirstName());
             statement.setString(2, entity.getLastName());
+            statement.setString(3, entity.getUsername());
+            statement.setString(4, entity.getPassword());
             int response = statement.executeUpdate();
             if(response != 0)
                 return Optional.empty();
@@ -124,11 +125,11 @@ public class UserDBRepository implements Repository<Long, Utilizator> {
     }
 
     @Override
-    public Optional<Utilizator> delete(Long ID) {
+    public Optional<Utilizator> delete(String ID) {
         try(Connection connection = DriverManager.getConnection(url, username, password);
-            PreparedStatement statement = connection.prepareStatement("delete from users where id = ?")
+            PreparedStatement statement = connection.prepareStatement("delete from users where username = ?")
         ){
-            statement.setInt(1, Math.toIntExact(ID));
+            statement.setString(1, ID);
             Optional<Utilizator> user = findOne(ID);
             int response = statement.executeUpdate();
             if(response != 0)
@@ -143,11 +144,11 @@ public class UserDBRepository implements Repository<Long, Utilizator> {
     @Override
     public Optional<Utilizator> update(Utilizator entity) {
         try(Connection connection = DriverManager.getConnection(url, username, password);
-            PreparedStatement statement = connection.prepareStatement("update users set first_name = ?, last_name = ? where id = ?")
+            PreparedStatement statement = connection.prepareStatement("update users set first_name = ?, last_name = ?, password = ? where username = ?")
         ){
             statement.setString(1, entity.getFirstName());
             statement.setString(2, entity.getLastName());
-            statement.setInt(3, Math.toIntExact(entity.getId()));
+            statement.setString(3, entity.getId());
             int response = statement.executeUpdate();
             if(response != 0)
                 return Optional.empty();
@@ -156,5 +157,15 @@ public class UserDBRepository implements Repository<Long, Utilizator> {
         } catch (SQLException e){
             throw new RuntimeException(e);
         }
+    }
+
+    protected static Utilizator extractUser(ResultSet resultSet) throws SQLException {
+        String username= resultSet.getString("username");
+        String firstName=resultSet.getString("first_name");
+        String lastName=resultSet.getString("last_name");
+        String password = resultSet.getString("password");
+        Utilizator user=new Utilizator(firstName,lastName, username, password);
+        user.setId(username);
+        return user;
     }
 }

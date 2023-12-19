@@ -1,31 +1,40 @@
 package ro.ubbcluj.map.service;
 
-import ro.ubbcluj.map.domain.entities.*;
-import ro.ubbcluj.map.repository.InMemoryRepository;
-import ro.ubbcluj.map.repository.dbrepositories.UserDBRepository;
+import ro.ubbcluj.map.domain.entities.Message;
+import ro.ubbcluj.map.domain.entities.Utilizator;
+import ro.ubbcluj.map.repository.dbrepositories.MessageDBRepository;
+import ro.ubbcluj.map.repository.paging.Page;
+import ro.ubbcluj.map.repository.paging.Pageable;
+import ro.ubbcluj.map.repository.paging.PageableImplementation;
+import ro.ubbcluj.map.repository.pagingrepositories.UserDBPagingRepository;
 import ro.ubbcluj.map.utils.events.ChangeEventType;
 import ro.ubbcluj.map.utils.events.UtilizatorChangeEvent;
 import ro.ubbcluj.map.utils.observer.Observable;
 import ro.ubbcluj.map.utils.observer.Observer;
 
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
-public class UsersService implements Observable<UtilizatorChangeEvent>, Service<Long, Utilizator> {
-//        InMemoryRepository<Long, Utilizator> repoUsers;
-        InMemoryRepository<Long, Message> repoMessages;
-    private final UserDBRepository repoUsers;
+public class UsersService implements Observable<UtilizatorChangeEvent>, Service<String, Utilizator> {
+    //    InMemoryRepository<Long, Utilizator> repoUsers;
+//    private final UserDBRepository repoUsers;
+    private final MessageDBRepository repoMessages;
+    private final UserDBPagingRepository repoUsers;
     private final List<Observer<UtilizatorChangeEvent>> observers = new ArrayList<>();
+    private int page;
+    private int pageSize;
+    private Pageable pageable;
 
-    public UsersService(UserDBRepository repoUsers) {
+    public UsersService(UserDBPagingRepository repoUsers, MessageDBRepository repoMessages) {
+        this.repoMessages = repoMessages;
         this.repoUsers = repoUsers;
-//        this.repoMessages = repoMessages;
     }
-    
+
     @Override
     public Utilizator add(Utilizator E) {
-//        setID(repoUsers, E);
         Optional<Utilizator> user = repoUsers.save(E);
-        if(user.isPresent()){
+        if (user.isPresent()) {
             return E;
         }
         notifyObservers(new UtilizatorChangeEvent(ChangeEventType.ADD, null));
@@ -33,7 +42,7 @@ public class UsersService implements Observable<UtilizatorChangeEvent>, Service<
     }
 
     @Override
-    public Utilizator remove(Long id) {
+    public Utilizator remove(String id) {
         Optional<Utilizator> user = repoUsers.delete(id);
         if (user.isPresent()) {
             notifyObservers(new UtilizatorChangeEvent(ChangeEventType.DELETE, user.get()));
@@ -43,7 +52,7 @@ public class UsersService implements Observable<UtilizatorChangeEvent>, Service<
     }
 
     @Override
-    public Utilizator find(Long id) {
+    public Utilizator find(String id) {
         Optional<Utilizator> user = repoUsers.findOne(id);
         return user.orElse(null);
     }
@@ -57,6 +66,34 @@ public class UsersService implements Observable<UtilizatorChangeEvent>, Service<
             return null;
         }
         return entity;
+    }
+
+    public void sendMessage(Utilizator from, List<Utilizator> to, String content) {
+        repoMessages.save(new Message(from, to, content, null));
+        notifyObservers(new UtilizatorChangeEvent(ChangeEventType.ADD, null));
+    }
+
+    public void replyMessage(Utilizator from, Utilizator to, Message replyTo, String content) {
+        repoMessages.save(new Message(from, Collections.singletonList(to), content, replyTo));
+        notifyObservers(new UtilizatorChangeEvent(ChangeEventType.ADD, null));
+    }
+
+    public Iterable<Message> getMessages(Utilizator u1, Utilizator u2) {
+        Iterable<Message> messages = repoMessages.findAll();
+        return StreamSupport.stream(messages.spliterator(), false)
+                .filter(message -> {
+                    if (Objects.equals(message.getFrom().getId(), u1.getId()) &&
+                            !message.getTo().stream()
+                                    .filter(utilizator -> Objects.equals(utilizator.getId(), u2.getId()))
+                                    .toList()
+                                    .isEmpty())
+                        return true;
+                    return Objects.equals(message.getFrom().getId(), u2.getId()) &&
+                            !message.getTo().stream()
+                                    .filter(utilizator -> Objects.equals(utilizator.getId(), u1.getId()))
+                                    .toList()
+                                    .isEmpty();
+                }).toList();
     }
 
     @Override
@@ -78,28 +115,24 @@ public class UsersService implements Observable<UtilizatorChangeEvent>, Service<
     public void notifyObservers(UtilizatorChangeEvent t) {
         observers.forEach(x -> x.update(t));
     }
-    
-    public Message sendMessage(Utilizator from, String to, String mesaj) {
-        List<Utilizator> users_to = Arrays.stream(to.split(",")).map(id_user -> find(Long.valueOf(id_user))).toList();
-        Message message = new Message(from, users_to, mesaj);
-        setID(repoMessages, message);
-        Optional<Message> messageOptional = repoMessages.save(message);
-        return messageOptional.orElse(null);
+
+    public void setPageSize(int size) {
+        this.pageSize = size;
     }
 
-    private Message findMessage(Long id_message){
-        Optional<Message> messages = repoMessages.findOne(id_message);
-        return messages.orElse(null);
-    }
-//    public Message replyToMessage(Long id_message, Utilizator from, String mesaj){
-//        Message mesajPrimit = findMessage(id_message);
-//        Message message = new ReplyMessage(from, Collections.singletonList(mesajPrimit.getFrom()), mesaj, mesajPrimit);
-//
+//    public void setPageable(Pageable pageable) {
+//        this.pageable = pageable;
 //    }
-    private <T extends Entity<Long>> void setID(InMemoryRepository<Long, T> repository, T entity) {
-        long id = 0;
-        while(repository.findOne(id).isPresent())
-            id++;
-        entity.setId(id);
+
+//    public Set<Utilizator> getNextUsers() {
+//        this.page++;
+//        return getUsersOnPage(this.page);
+//    }
+
+    public Set<Utilizator> getUsersOnPage(int page, Utilizator utilizator) {
+        this.page=page;
+        Pageable pageable = new PageableImplementation(page, this.pageSize);
+        Page<Utilizator> userPage = repoUsers.findAll(pageable, utilizator.getId());
+        return userPage.getContent().collect(Collectors.toSet());
     }
 }

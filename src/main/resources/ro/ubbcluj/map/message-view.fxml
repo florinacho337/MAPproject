@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="251.0" prefWidth="492.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ro.ubbcluj.map.controller.MessageController">
+    <TextArea fx:id="textAreaMessage" layoutX="41.0" layoutY="23.0" onKeyPressed="#setOnKeyPressed" prefHeight="147.0" prefWidth="403.0" AnchorPane.bottomAnchor="81.0" AnchorPane.leftAnchor="41.0" AnchorPane.rightAnchor="41.0" AnchorPane.topAnchor="23.0" />
+    <Button layoutX="173.0" layoutY="186.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#handleSend" prefHeight="46.0" prefWidth="140.0" text="Send" AnchorPane.bottomAnchor="19.0" AnchorPane.leftAnchor="173.0" AnchorPane.rightAnchor="173.0" />
+</AnchorPane>

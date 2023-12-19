@@ -9,7 +9,7 @@ import java.util.Objects;
 public class PrietenDTO {
     Prietenie prietenie;
     Utilizator user;
-    Long id;
+    String id;
     String firstName;
     String lastName;
     String friendsFrom;
@@ -38,7 +38,7 @@ public class PrietenDTO {
         return user;
     }
 
-    public Long getId() {
+    public String getId() {
         return id;
     }
 
