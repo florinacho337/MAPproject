@@ -8,7 +8,7 @@ import ro.ubbcluj.map.domain.entities.Utilizator;
 import ro.ubbcluj.map.domain.validators.ValidationException;
 import ro.ubbcluj.map.service.UsersService;
 
-public class EditUserController {
+public class EditUserController implements Controller{
     @FXML
     private TextField textFieldFirstName;
     @FXML
@@ -84,4 +84,9 @@ public class EditUserController {
 
     @FXML
     public void handleCancel(){this.dialogStage.close();}
+
+    @Override
+    public void close() {
+        this.dialogStage.close();
+    }
 }

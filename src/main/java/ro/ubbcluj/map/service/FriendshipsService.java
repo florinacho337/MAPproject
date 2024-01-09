@@ -34,9 +34,7 @@ public class FriendshipsService implements Service<Tuple<String, String>, Priete
     private final FriendshipDBPagingRepository repoFriendships;
     private final UserDBPagingRepository repoUsers;
     private final FriendRequestDBPagingRepository repoFriendRequests;
-    private int page;
     private int pageSize;
-    private Pageable pageable;
     private String startingNode;
     private final List<Observer<UtilizatorChangeEvent>> observers = new ArrayList<>();
 
@@ -44,7 +42,6 @@ public class FriendshipsService implements Service<Tuple<String, String>, Priete
         this.repoFriendships = repoFriendships;
         this.repoUsers = repoUsers;
         this.repoFriendRequests = repoFriendRequests;
-        this.page = 0;
         this.pageSize = 100;
     }
 
@@ -302,7 +299,6 @@ public class FriendshipsService implements Service<Tuple<String, String>, Priete
 //    }
 
     public Set<Prietenie> getFriendshipsOnPage(int page, Utilizator utilizator) {
-        this.page=page;
         Pageable pageable = new PageableImplementation(page, this.pageSize);
         Page<Prietenie> friendshipPage = repoFriendships.findAll(pageable, utilizator.getId());
         return friendshipPage.getContent().collect(Collectors.toSet());
@@ -314,7 +310,6 @@ public class FriendshipsService implements Service<Tuple<String, String>, Priete
 //    }
 
     public Set<FriendRequest> getFriendRequestsOnPage(int page, Utilizator utilizator) {
-        this.page=page;
         Pageable pageable = new PageableImplementation(page, this.pageSize);
         Page<FriendRequest> friendRequestPage = repoFriendRequests.findAll(pageable, utilizator.getId());
         return friendRequestPage.getContent().collect(Collectors.toSet());

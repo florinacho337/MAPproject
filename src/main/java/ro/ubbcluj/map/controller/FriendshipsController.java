@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.StreamSupport;
 
-public class FriendshipsController implements Observer<UtilizatorChangeEvent> {
+public class FriendshipsController implements Observer<UtilizatorChangeEvent>, Controller {
     @FXML
     private TableColumn<PrietenDTO, String> tableColumnFirstName;
     @FXML
@@ -67,5 +67,10 @@ public class FriendshipsController implements Observer<UtilizatorChangeEvent> {
     @Override
     public void update(UtilizatorChangeEvent utilizatorChangeEvent) {
         initModel();
+    }
+
+    @Override
+    public void close() {
+        this.dialogStage.close();
     }
 }

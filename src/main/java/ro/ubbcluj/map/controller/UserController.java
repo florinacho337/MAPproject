@@ -11,7 +11,6 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.ContextMenuEvent;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import org.w3c.dom.Node;
 import ro.ubbcluj.map.UserApplication;
 import ro.ubbcluj.map.domain.entities.FriendRequest;
 import ro.ubbcluj.map.domain.entities.Prietenie;
@@ -31,7 +30,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.StreamSupport;
 
-public class UserController implements Observer<UtilizatorChangeEvent> {
+public class UserController implements Observer<UtilizatorChangeEvent>, Controller {
     @FXML
     private Pagination usersPagination;
     @FXML
@@ -82,14 +81,14 @@ public class UserController implements Observer<UtilizatorChangeEvent> {
     private int usersPageSize;
     private int entitiesPageSize;
     private Stage stage;
-    private List<Stage> dialogs;
+    private List<Controller> controllers;
 
     public void setService(UsersService usersService, FriendshipsService friendshipsService, Utilizator utilizator, Stage stage) {
         this.usersService = usersService;
         this.friendshipsService = friendshipsService;
         this.utilizator = utilizator;
         this.stage = stage;
-        this.dialogs = new ArrayList<>();
+        this.controllers = new ArrayList<>();
         usersService.addObserver(this);
         friendshipsService.addObserver(this);
         usersPageSize = 10;
@@ -99,7 +98,7 @@ public class UserController implements Observer<UtilizatorChangeEvent> {
     }
 
     private void initStage(){
-        stage.setOnCloseRequest(event -> dialogs.forEach(Stage::close));
+        stage.setOnCloseRequest(event -> controllers.forEach(Controller::close));
     }
 
     @FXML
@@ -166,7 +165,7 @@ public class UserController implements Observer<UtilizatorChangeEvent> {
 
             MessageController controller = loader.getController();
             controller.setService(usersService, dialogStage, utilizator, to);
-            dialogs.add(dialogStage);
+            controllers.add(controller);
 
             dialogStage.show();
         } catch (IOException e) {
@@ -175,7 +174,7 @@ public class UserController implements Observer<UtilizatorChangeEvent> {
     }
 
     public void handleExit(ActionEvent actionEvent) {
-        this.dialogs.forEach(Stage::close);
+        controllers.forEach(Controller::close);
         this.stage.close();
     }
 
@@ -265,7 +264,7 @@ public class UserController implements Observer<UtilizatorChangeEvent> {
 
         ChatController controller = loader.getController();
         controller.setService(usersService, dialogStage, utilizator, user);
-        dialogs.add(dialogStage);
+        controllers.add(controller);
 
         dialogStage.show();
     }
@@ -317,5 +316,10 @@ public class UserController implements Observer<UtilizatorChangeEvent> {
         this.entitiesPageSize = Integer.parseInt(textFieldMaxEntities.getText());
         initFR(1);
         initFriends(1);
+    }
+
+    @Override
+    public void close() {
+        handleExit(new ActionEvent());
     }
 }

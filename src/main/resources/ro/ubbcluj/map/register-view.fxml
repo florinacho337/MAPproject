@@ -38,19 +38,19 @@
       </VBox>
       <VBox layoutX="277.0" layoutY="133.0" prefHeight="200.0" prefWidth="193.0" spacing="31.0" AnchorPane.bottomAnchor="102.0" AnchorPane.rightAnchor="135.0" AnchorPane.topAnchor="133.0">
          <children>
-            <TextField fx:id="firstNameField">
+            <TextField fx:id="firstNameField" onKeyPressed="#setOnKeyPressedFN">
                <cursor>
                   <Cursor fx:constant="TEXT" />
                </cursor></TextField>
-            <TextField fx:id="lastNameField">
+            <TextField fx:id="lastNameField" onKeyPressed="#setOnKeyPressedLN">
                <cursor>
                   <Cursor fx:constant="TEXT" />
                </cursor></TextField>
-            <TextField fx:id="usernameFieldRegister">
+            <TextField fx:id="usernameFieldRegister" onKeyPressed="#setOnKeyPressedUsernameRegister">
                <cursor>
                   <Cursor fx:constant="TEXT" />
                </cursor></TextField>
-            <PasswordField fx:id="passwordFieldRegister">
+            <PasswordField fx:id="passwordFieldRegister" onKeyPressed="#setOnKeyPressedPasswordRegister">
                <cursor>
                   <Cursor fx:constant="TEXT" />
                </cursor></PasswordField>

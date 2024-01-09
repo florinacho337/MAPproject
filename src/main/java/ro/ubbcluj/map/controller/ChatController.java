@@ -18,7 +18,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.StreamSupport;
 
-public class ChatController implements Observer<UtilizatorChangeEvent> {
+public class ChatController implements Observer<UtilizatorChangeEvent>, Controller {
     @FXML
     private Label labelReply;
     @FXML
@@ -100,5 +100,10 @@ public class ChatController implements Observer<UtilizatorChangeEvent> {
             }
             textFieldMessage.clear();
         }
+    }
+
+    @Override
+    public void close() {
+        this.dialogStage.close();
     }
 }

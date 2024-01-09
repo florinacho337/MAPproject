@@ -11,7 +11,7 @@ import ro.ubbcluj.map.service.UsersService;
 
 import java.util.List;
 
-public class MessageController{
+public class MessageController implements Controller {
     @FXML
     private TextArea textAreaMessage;
 
@@ -46,5 +46,10 @@ public class MessageController{
             MessageAlert.showMessage(null, Alert.AlertType.INFORMATION, "Succes!", "Mesaj trimis cu succes!");
             dialogStage.close();
         }
+    }
+
+    @Override
+    public void close() {
+        this.dialogStage.close();
     }
 }
